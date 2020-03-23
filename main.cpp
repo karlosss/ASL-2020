@@ -27,21 +27,21 @@ void generate_m(double ** PM, size_t row, size_t col)
 
     std::random_device rd;
     std::mt19937 gen{rd()};
-    std::uniform_real_distribution<double> dist(1., 2.);
+    std::uniform_real_distribution<double> dist(0., 1.);
 
     for (size_t i = 0; i < row; ++i) {
         double sum = 0.;
         for(size_t j = 0; j < col; ++j) {
-            M[i*row + j] = dist(gen);
-            sum += M[i*row + j];
+            M[i*col + j] = dist(gen);
+            sum += M[i*col + j];
         }
         assert(sum > 0.);
         for(size_t j = 0; j < col; ++j) {
-            M[i*row + j] /= sum;
+            M[i*col + j] /= sum;
         }
         double sum_prob = 0.;
         for(size_t j = 0; j < col; ++j) {
-            sum_prob += M[i*row + j];
+            sum_prob += M[i*col + j];
         }
         assert(abs(sum_prob - 1.) < EPS);
     }   
@@ -57,10 +57,12 @@ void print_m(double* M, size_t rows, size_t cols){
 }
 
 void test_base() {
-    N = 2; M = 2; T = 3;
+    N = 24; M = 38; T = 100;
 
-    int *O; // observation
-    double *PI, *A, *B; // Initial, Transition and Emission probabilities
+    int* O; // observation
+    double* PI; // Initial probabilities
+    double* A; // Transition probabilities
+    double* B; // Emission probabilities
 
     generate_observation(&O, T);
     generate_m(&PI, 1, N);
@@ -79,6 +81,7 @@ void test_base() {
     baum_welch_test(PI, A, B, O, FW, BW, C, N, M, T, 1);
 
     free(O); free(PI); free(A); free(B);
+    free(FW); free(BW); free(C);
 
     return;
 }
