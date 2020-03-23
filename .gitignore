@@ -1,2 +1,5 @@
-*.h.gch
-a.out
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+CMakeFiles
+asl_project
