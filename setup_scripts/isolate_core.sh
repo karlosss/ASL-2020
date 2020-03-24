@@ -1,3 +1,5 @@
+#!/bin/bash
+
 GRUB_PATH="/etc/default/grub"
 
 if [[ $EUID -ne 0 ]]

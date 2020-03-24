@@ -2,5 +2,7 @@ cmake_install.cmake
 CMakeCache.txt
 Makefile
 CMakeFiles
-asl_project
-/.vscode
+*.cbp
+*.orig
+bin/*
+!bin/.gitkeep
