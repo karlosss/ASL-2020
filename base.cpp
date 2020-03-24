@@ -1,18 +1,18 @@
-#include <stdlib.h>
-#include <math.h>
+#include <stdio.h>
 #include <cassert>
+#include <math.h>
+
 #define EPS (1e-6)
 
 void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M,  int T, int n_iter) {
     for(int it = 0; it < n_iter; it++) {
-    
+        
         // Calculate the Forward trellis (scaled)
         double scale = 0.;
         for(int i = 0; i < N; i++) {
             FW[i*T + 0] = PI[i]*B[i*M + O[0]];
             scale += FW[i*T + 0];
         }
-
         // Scale timestep 0
         C[0] = 1./scale;
         for(int i = 0; i < N; i++) {
@@ -22,12 +22,14 @@ void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, doubl
         for(int t = 1; t < T; t++) {
             scale = 0.;
             for(int i = 0; i < N; i++) {
+                FW[i*T + t] = 0.;
                 for(int j = 0; j < N; j++) {
                     FW[i*T + t] += FW[j*T + t-1]*A[j*N + i]*B[i*M + O[t]];
                 }
                 scale += FW[i*T + t];
             }
             C[t] = 1./scale;
+
             for(int i = 0; i < N; i++) {
                 FW[i*T + t]*= C[t];
             } 
@@ -40,6 +42,7 @@ void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, doubl
 
         for(int t = T-2; t >= 0; t--) {
             for(int i = 0; i < N; i++) {
+                BW[i*T + t] = 0.;
                 for(int j = 0; j < N; j++) {
                     BW[i*T + t] += BW[j*T + t+1]*A[i*N+j]*B[j*M + O[t+1]];
                 }
@@ -51,7 +54,6 @@ void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, doubl
         for(int i = 0; i < N; i++) {
             PI[i] = FW[i*T + 0]*BW[i*T+0]/C[0];
         }
-            
 
         // update the State Transition probabilities
         for(int i = 0; i < N; i++) {
@@ -82,6 +84,8 @@ void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, doubl
 }
 
 void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M,  int T, int n_iter) {
+    //double log_prob = 0.;
+
     for(int it = 0; it < n_iter; it++) {
         
         //double log_obs_prob = 0.;
@@ -94,7 +98,7 @@ void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, doubl
         }
         // Scale timestep 0
         C[0] = 1./scale;
-        //log_obs_prob += log(C[0]);
+        //log_obs_prob -= log(C[0]);
         for(int i = 0; i < N; i++) {
             FW[i*T + 0]*= C[0];
         }
@@ -102,13 +106,14 @@ void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, doubl
         for(int t = 1; t < T; t++) {
             scale = 0.;
             for(int i = 0; i < N; i++) {
+                FW[i*T + t] = 0.;
                 for(int j = 0; j < N; j++) {
                     FW[i*T + t] += FW[j*T + t-1]*A[j*N + i]*B[i*M + O[t]];
                 }
                 scale += FW[i*T + t];
             }
             C[t] = 1./scale;
-            //log_obs_prob += log(C[t]);
+            //log_obs_prob -= log(C[t]);
             for(int i = 0; i < N; i++) {
                 FW[i*T + t]*= C[t];
             } 
@@ -130,6 +135,7 @@ void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, doubl
 
         for(int t = T-2; t >= 0; t--) {
             for(int i = 0; i < N; i++) {
+                BW[i*T + t] = 0.;
                 for(int j = 0; j < N; j++) {
                     BW[i*T + t] += BW[j*T + t+1]*A[i*N+j]*B[j*M + O[t+1]];
                 }
@@ -170,6 +176,7 @@ void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, doubl
                     num += FW[i*T + t]*A[i*N + j]*B[j*M + O[t+1]]*BW[j*T + t+1];
                     denom += FW[i*T + t]*BW[i*T + t]/C[t]; 
                 }
+                // Might get 0/0 i.e NaN
                 A[i*N + j] = num/denom;
             }
         }
@@ -204,5 +211,11 @@ void baum_welch_test(double* PI, double* A, double* B, int* O, double* FW, doubl
             }
             assert(abs(sum_Bi - 1.) < EPS);
         }
+        
+        /*if(abs(log_prob - log_obs_prob) < EPS) {
+            printf("Finished at iteration n_iter: %d\n", it);
+            break; 
+        }*/
+        //log_prob = log_obs_prob;
     }
 }
