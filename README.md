@@ -14,4 +14,6 @@ Prerequisities:
 - `make`
 
 Run `compile.sh` to compiler all the binaries.
-Run `run.sh <binary>` to run a binary.
+
+Run `run.sh <binary>` to run a binary. The script reads the standard input and passes it to the program: 
+4 integers are expected and the input is not verified (yet).
