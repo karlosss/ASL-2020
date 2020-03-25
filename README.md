@@ -13,4 +13,5 @@ Prerequisities:
 - `cmake >= 3.16`
 - `make`
 
-Run `compile.sh` or `run.sh`.
+Run `compile.sh` to compiler all the binaries.
+Run `run.sh <binary>` to run a binary.
