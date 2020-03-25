@@ -4,7 +4,6 @@ project(asl_project)
 set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -pedantic -Wextra -O3")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
-set(COMMON common/clock.h common/common.h common/generate.cpp common/main.cpp common/perf.cpp common/utils.cpp common/inline.h)
+set(LIB lib/clock.h lib/common.h lib/utils.cpp lib/main.cpp lib/perf.cpp base/base.cpp lib/modes.cpp lib/modes.h)
 
-add_executable(test test/test.cpp ${COMMON})
-add_executable(base opts/base.cpp ${COMMON})
+add_executable(no_opt opts/no_opt.cpp ${LIB})

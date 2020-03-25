@@ -3,7 +3,7 @@
 
 #define EPS (1e-6)
 
-INLINE void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M,  int T, int n_iter) {
+void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M,  int T, int n_iter) {
     //double log_prob = 0.;
 
     for(int it = 0; it < n_iter; it++) {

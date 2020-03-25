@@ -15,15 +15,8 @@ size_t perf(size_t N, size_t M, size_t T, size_t num_iter) {
     double *PI; // Initial probabilities
     double *A; // Transition probabilities
     double *B; // Emission probabilities
-
-    generate_observation(&O, T, M);
-    generate_m(&PI, 1, N);
-    generate_m(&A, N, N);
-    generate_m(&B, N, M);
-
-    double *FW = static_cast<double *>(malloc(N * T * sizeof(double)));
-    double *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
-    double *C = static_cast<double *>(malloc(T * sizeof(double)));
+    double *FW, *BW, *C;
+    generate_input(N, M, T, &O, &PI, &A, &B, &FW, &BW, &C);
 
     unsigned int cycles_low, cycles_high, cycles_low1, cycles_high1;
     size_t start, end;
