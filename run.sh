@@ -11,5 +11,7 @@ then
     exit 1
 fi
 
+read in
+
 number_of_cores=$(grep -c ^processor /proc/cpuinfo)
-taskset -c $(( number_of_cores-1 )) "bin/$1"
+taskset -c $(( number_of_cores-1 )) "bin/$1" <<< "$in"

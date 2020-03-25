@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(asl_project)
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -pedantic -Wextra -O3")
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -pedantic -Wextra -O3")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
-set(test_base_SOURCES test_base.cpp base.cpp utils.cpp)
-set(test_base_HEADERS base.h common.h)
+set(LIB lib/clock.h lib/common.h lib/utils.cpp lib/main.cpp lib/perf.cpp base/base.cpp lib/modes.cpp lib/modes.h)
 
-add_executable(test ${test_base_SOURCES} ${test_base_HEADERS})
-add_executable(base main.cpp utils.cpp base.cpp measure.h common.h)
+add_executable(no_opt opts/no_opt.cpp ${LIB})
+add_executable(validate base/validate.cpp ${LIB})
