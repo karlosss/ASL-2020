@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#include "../common/inline.h"
 
 #define EPS (1e-6)
 

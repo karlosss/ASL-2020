@@ -19,7 +19,7 @@ void test_mode(){
     baum_welch_base(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
     baum_welch(PI2, A2, B2, O2, FW2, BW2, C2, N, M, T, num_iter);
 
-    if(compare(N, M, T, O, PI, A, B, FW, BW, C, O2, PI2, A2, B2, FW2, BW2, C2)) exit(0);
+    if(compare_outputs(N, M, PI, A, B, PI2, A2, B2)) exit(0);
     exit(1);
 }
 

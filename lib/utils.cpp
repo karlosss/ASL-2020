@@ -1,4 +1,6 @@
+#include <math.h>
 #include <bits/stdc++.h>
+#define EPS (1e-3)
 
 void generate_observation(int** O, size_t len, size_t M) {
     *O = static_cast<int *>(malloc(len * sizeof(int)));
@@ -56,18 +58,17 @@ void copy_array(const int* src, int* dest, size_t s){
 }
 
 
-bool compare_arrays(const double* a, const double* b, size_t s){
-    for(size_t i = 0; i < s; ++i){
-        if(a[i] != b[i]) return false;
+double nrm_sqr_diff(double *x, double *y, int n) {
+    double nrm_sqr = 0.0;
+    for(int i = 0; i < n; i++) {
+        nrm_sqr += (x[i] - y[i]) * (x[i] - y[i]);
     }
-    return true;
-}
-
-bool compare_arrays(const int* a, const int* b, size_t s){
-    for(size_t i = 0; i < s; ++i){
-        if(a[i] != b[i]) return false;
+    
+    if (isnan(nrm_sqr)) {
+      nrm_sqr = INFINITY;
     }
-    return true;
+    
+    return nrm_sqr;
 }
 
 
@@ -81,14 +82,10 @@ void clone_input(size_t N, size_t M, size_t T, int* O, double* PI, double* A, do
     copy_array(B, *B2, N*M);
 }
 
-bool compare(size_t N, size_t M, size_t T, int* O, double* PI, double* A, double* B, double* FW, double* BW, double* C,
-             int* O2, double* PI2, double* A2, double* B2, double* FW2, double* BW2, double* C2){
+bool compare_outputs(size_t N, size_t M, double* PI, double* A, double* B,
+                     double* PI2, double* A2, double* B2){
     return
-    compare_arrays(O, O2, T) &&
-    compare_arrays(PI, PI2, N) &&
-    compare_arrays(A, A2, N*N) &&
-    compare_arrays(B, B2, N*M) &&
-    compare_arrays(FW, FW2, N*T) &&
-    compare_arrays(BW, BW2, N*T) &&
-    compare_arrays(C, C2, T);
+    nrm_sqr_diff(PI, PI2, N) < EPS &&
+    nrm_sqr_diff(A, A2, N*N) < EPS &&
+    nrm_sqr_diff(B, B2, N*M) < EPS;
 }
