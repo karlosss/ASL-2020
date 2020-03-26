@@ -1,6 +1,5 @@
 #include <bits/stdc++.h>
 #include "common.h"
-#include "modes.h"
 
 void test_mode(){
     size_t N = 200;
@@ -26,10 +25,14 @@ void test_mode(){
 void perf_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
 
     size_t cycles = perf(N, M, T, num_iter);
 
-    std::cout << cycles << std::endl;
+    std::cout << cycles;
 
     exit(0);
 }
