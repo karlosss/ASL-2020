@@ -1,3 +1,9 @@
+#include <bits/stdc++.h>
+
+size_t flop_count(int N, int M, int T, int n_iter){
+    return 42;
+}
+
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
     for(int it = 0; it < n_iter; it++) {
 
