@@ -1,13 +1,11 @@
 #include <bits/stdc++.h>
+#include <assert.h>
 
 #define EPS (1e-6)
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M,  int T, int n_iter) {
-    //double log_prob = 0.;
 
     for(int it = 0; it < n_iter; it++) {
-
-        //double log_obs_prob = 0.;
 
         // Calculate the Forward trellis (scaled)
         double scale = 0.;
@@ -17,7 +15,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         }
         // Scale timestep 0
         C[0] = 1./scale;
-        //log_obs_prob -= log(C[0]);
         for(int i = 0; i < N; i++) {
             FW[i*T + 0]*= C[0];
         }
@@ -32,7 +29,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 scale += FW[i*T + t];
             }
             C[t] = 1./scale;
-            //log_obs_prob -= log(C[t]);
             for(int i = 0; i < N; i++) {
                 FW[i*T + t]*= C[t];
             }
@@ -130,11 +126,5 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             }
             assert(abs(sum_Bi - 1.) < EPS);
         }
-
-        /*if(abs(log_prob - log_obs_prob) < EPS) {
-            printf("Finished at iteration n_iter: %d\n", it);
-            break; 
-        }*/
-        //log_prob = log_obs_prob;
     }
 }
