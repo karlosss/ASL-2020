@@ -1,12 +1,23 @@
 #include <bits/stdc++.h>
 #include "common.h"
-#include "modes.h"
+
+void debug_mode() {
+    size_t N, M, T, num_iter;
+    std::cin >> N >> M >> T >> num_iter;
+
+    int* O;
+    double *PI, *A, *B, *FW, *BW, *C;
+
+    generate_input(N, M, T, &O, &PI, &A, &B, &FW, &BW, &C);
+
+    baum_welch(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
+}
 
 void test_mode(){
-    size_t N = 200;
-    size_t M = 200;
-    size_t T = 200;
-    size_t num_iter = 5;
+    size_t N = 20;
+    size_t M = 20;
+    size_t T = 100;
+    size_t num_iter = 100;
 
     int* O;
     double *PI, *A, *B, *FW, *BW, *C;
@@ -23,13 +34,20 @@ void test_mode(){
     exit(1);
 }
 
-void perf_mode(){
+void runtime_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
 
-    size_t cycles = perf(N, M, T, num_iter);
+    std::cout << runtime(N, M, T, num_iter) << std::endl;
 
-    std::cout << cycles << std::endl;
+    exit(0);
+}
+
+void flops_mode(){
+    size_t N, M, T, num_iter;
+    std::cin >> N >> M >> T >> num_iter;
+
+    std::cout << flop_count(N, M, T, num_iter) << std::endl;
 
     exit(0);
 }
