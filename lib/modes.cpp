@@ -1,11 +1,27 @@
 #include <bits/stdc++.h>
 #include "common.h"
 
+void debug_mode() {
+    size_t N, M, T, num_iter;
+    std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
+
+    int* O;
+    double *PI, *A, *B, *FW, *BW, *C;
+
+    generate_input(N, M, T, &O, &PI, &A, &B, &FW, &BW, &C);
+
+    baum_welch(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
+}
+
 void test_mode(){
-    size_t N = 200;
-    size_t M = 200;
-    size_t T = 200;
-    size_t num_iter = 5;
+    size_t N = 20;
+    size_t M = 20;
+    size_t T = 100;
+    size_t num_iter = 100;
 
     int* O;
     double *PI, *A, *B, *FW, *BW, *C;
@@ -22,7 +38,7 @@ void test_mode(){
     exit(1);
 }
 
-void perf_mode(){
+void runtime_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
     if(std::cin.fail() || std::cin.eof()){
@@ -30,9 +46,20 @@ void perf_mode(){
         exit(2);
     }
 
-    size_t cycles = perf(N, M, T, num_iter);
+    std::cout << runtime(N, M, T, num_iter) << std::endl;
 
-    std::cout << cycles;
+    exit(0);
+}
+
+void flops_mode(){
+    size_t N, M, T, num_iter;
+    std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
+
+    std::cout << flop_count(N, M, T, num_iter) << std::endl;
 
     exit(0);
 }
