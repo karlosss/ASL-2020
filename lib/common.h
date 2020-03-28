@@ -15,6 +15,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
 void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter);
 
-size_t perf(size_t N, size_t M, size_t T, size_t n_iter);
+size_t runtime(int N, int M, int T, int n_iter);
 
 #endif //ASL_PROJECT_COMMON_H
