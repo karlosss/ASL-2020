@@ -38,7 +38,7 @@ size_t runtime(int N, int M, int T, int num_iter) {
         }
         cycles = cycles_elapsed(start);
 
-        cycle_measurements[j] = cycles;
+        cycle_measurements[j] = cycles / num_runs;
     }
 
     free(O);
