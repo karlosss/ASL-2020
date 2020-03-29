@@ -4,6 +4,10 @@
 void debug_mode() {
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
 
     int* O;
     double *PI, *A, *B, *FW, *BW, *C;
@@ -37,6 +41,10 @@ void test_mode(){
 void runtime_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
 
     std::cout << runtime(N, M, T, num_iter) << std::endl;
 
@@ -46,6 +54,10 @@ void runtime_mode(){
 void flops_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
+    if(std::cin.fail() || std::cin.eof()){
+        std::cout << "I/O error!";
+        exit(2);
+    }
 
     std::cout << flop_count(N, M, T, num_iter) << std::endl;
 
