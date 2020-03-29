@@ -16,6 +16,8 @@ Prerequisities:
 Run `compile.sh` to compile all the binaries. After compilation, all of them are automatically validated. Old binaries are automatically pruned. 
 
 The `run.sh` has multiple modes:
-- `run.sh validate` validates the code using a default input hardcoded in the script.
-- `run.sh` runs all binaries and reports their performance. The input is read from stdin.
-- `run.sh BIN` runs only binary `BIN` and reports its performance. The input is read from stdin.
+- `run.sh validate` - run validation (specify input on stdin)
+- `run.sh debug BIN` - run binary BIN in debug mode (no runtime measurement, specify input on stdin)
+- `run.sh runtime` - run all binaries in runtime mode (specify input on stdin)
+- `run.sh runtime BIN` - run binary BIN in runtime mode (specify input on stdin)
+- input is 4 integers - N, M, T, num_iters - separated by a space
