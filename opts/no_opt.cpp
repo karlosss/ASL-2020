@@ -1,7 +1,10 @@
 #include <bits/stdc++.h>
 
 size_t flop_count(int N, int M, int T, int n_iter){
-    return 42;
+    size_t add = 4*(T-1)*N*N + T*N*M + 2*T*N;
+    size_t mult = 8*(T-1)*N*N + T*N*M + 3*T*N + N;
+    size_t div = (T-1)*N + N*N + T*N*M + T*N + N*M + N + T;
+    return n_iter*(add + mult + div);
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
