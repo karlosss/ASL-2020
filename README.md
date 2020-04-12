@@ -15,7 +15,7 @@ Run the following scripts (you should check what they do, provided without warra
 
 Prerequisities:
 - `gcc`
-- `cmake >= 3.16`
+- `cmake >= 3.10`
 - `make`
 
 Run `compile.sh` to compile all the binaries. After compilation, all of them are automatically validated. Old binaries are automatically pruned. 
