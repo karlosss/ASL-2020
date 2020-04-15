@@ -1,4 +1,6 @@
 #include <bits/stdc++.h>
+#include <papi.h>
+#include "common.h"
 
 size_t flop_count(int N, int M, int T, int n_iter){
     size_t add = 4*(T-1)*N*N + T*N*M + 2*T*N;
@@ -8,9 +10,15 @@ size_t flop_count(int N, int M, int T, int n_iter){
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
+    int retval;
+    retval = PAPI_hl_region_begin("BaumWelch");
+    if ( retval != PAPI_OK ) handle_error(retval);
+
     for(int it = 0; it < n_iter; it++) {
 
         // Calculate the Forward trellis (scaled)
+        retval = PAPI_hl_region_begin("forwardVars");
+        if ( retval != PAPI_OK ) handle_error(retval);
         double scale = 0.;
         for(int i = 0; i < N; i++) {
             FW[i*T + 0] = PI[i]*B[i*M + O[0]];
@@ -38,6 +46,11 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             }
         }
 
+        retval = PAPI_hl_region_end("forwardVars");
+        if ( retval != PAPI_OK ) handle_error(retval);
+        
+        retval = PAPI_hl_region_begin("backwardVars");
+        if ( retval != PAPI_OK ) handle_error(retval);
         // Calculate the Backward trellis (scaled)
         for(int i = 0; i < N; i++) {
             BW[i*T + T-1] = C[T-1];
@@ -52,12 +65,20 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 BW[i*T + t]*= C[t];
             }
         }
+        retval = PAPI_hl_region_end("backwardVars");
+        if ( retval != PAPI_OK ) handle_error(retval);
 
+        retval = PAPI_hl_region_begin("updateInitial");
+        if ( retval != PAPI_OK ) handle_error(retval);
         // update the Initial State probabilities
         for(int i = 0; i < N; i++) {
             PI[i] = FW[i*T + 0]*BW[i*T+0]/C[0];
         }
+        retval = PAPI_hl_region_end("updateInitial");
+        if ( retval != PAPI_OK ) handle_error(retval);
 
+        retval = PAPI_hl_region_begin("updateTransition");
+        if ( retval != PAPI_OK ) handle_error(retval);
         // update the State Transition probabilities
         for(int i = 0; i < N; i++) {
             for(int j = 0; j < N; j++) {
@@ -70,7 +91,11 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 A[i*N + j] = num/denom;
             }
         }
+        retval = PAPI_hl_region_end("updateTransition");
+        if ( retval != PAPI_OK ) handle_error(retval);
 
+        retval = PAPI_hl_region_begin("updateEmission");
+        if ( retval != PAPI_OK ) handle_error(retval);
         // update the State Emission probabilities
         for(int o = 0; o < M; o++) {
             for(int j = 0; j < N; j++) {
@@ -83,5 +108,11 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 B[j*M + o] = sum_o/denom;
             }
         }
+
+        retval = PAPI_hl_region_end("updateEmission");
+        if ( retval != PAPI_OK ) handle_error(retval);
     }
+
+    retval = PAPI_hl_region_end("BaumWelch");
+    if ( retval != PAPI_OK ) handle_error(retval);
 }

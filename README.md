@@ -17,12 +17,19 @@ Prerequisities:
 - `gcc`
 - `cmake >= 3.10`
 - `make`
+- `PAPI == 6.0.0.1`
 
-Run `compile.sh` to compile all the binaries. After compilation, all of them are automatically validated. Old binaries are automatically pruned. 
+## Installing PAPI
+
+    git clone https://bitbucket.org/icl/papi.git
+    cd papi/src
+    ./configure --prefix=INSTALL_DIR
+    make && make install
+    
+## Compile and run
+Run `compile.sh` to compile all the binaries. After compilation, all of them are automatically tested. Old binaries are automatically pruned. 
 
 The `run.sh` has multiple modes:
-- `run.sh validate` - run validation (specify input on stdin)
-- `run.sh debug BIN` - run binary BIN in debug mode (no runtime measurement, specify input on stdin)
-- `run.sh runtime` - run all binaries in runtime mode (specify input on stdin)
-- `run.sh runtime BIN` - run binary BIN in runtime mode (specify input on stdin)
+- `run.sh validate` - run validation of base implementation (specify input on stdin)
+- `run.sh execute BIN` - execute binary BIN in run mode and log measurements(specify input on stdin)
 - Input is 4 integers - N, M, T, num_iters - separated by a space

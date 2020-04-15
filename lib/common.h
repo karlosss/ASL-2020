@@ -3,6 +3,7 @@
 
 #include <bits/stdc++.h>
 
+
 void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double** A, double** B, double** FW, double** BW, double** C);
 
 void clone_input(size_t N, size_t M, size_t T, int* O, double* PI, double* A, double* B,
@@ -15,8 +16,8 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
 void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter);
 
-size_t runtime(int N, int M, int T, int n_iter);
-
 size_t flop_count(int N, int M, int T, int n_iter);
+
+void handle_error (int retval);
 
 #endif //ASL_PROJECT_COMMON_H

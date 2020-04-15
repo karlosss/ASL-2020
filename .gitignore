@@ -4,5 +4,7 @@ Makefile
 CMakeFiles
 *.cbp
 *.orig
+*.a
 bin/*
+logs/
 !bin/.gitkeep

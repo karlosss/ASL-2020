@@ -1,5 +1,6 @@
 #include <math.h>
 #include <bits/stdc++.h>
+#include <papi.h>
 #define EPS (1e-3)
 
 void generate_observation(int** O, size_t len, size_t M) {
@@ -88,4 +89,10 @@ bool compare_outputs(size_t N, size_t M, double* PI, double* A, double* B,
     nrm_sqr_diff(PI, PI2, N) < EPS &&
     nrm_sqr_diff(A, A2, N*N) < EPS &&
     nrm_sqr_diff(B, B2, N*M) < EPS;
+}
+
+void handle_error (int retval)
+{
+     printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
+     exit(1);
 }

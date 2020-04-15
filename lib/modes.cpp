@@ -1,27 +1,13 @@
 #include <bits/stdc++.h>
 #include "common.h"
 
-void debug_mode() {
+void test_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
     if(std::cin.fail() || std::cin.eof()){
         std::cout << "I/O error!";
         exit(2);
     }
-
-    int* O;
-    double *PI, *A, *B, *FW, *BW, *C;
-
-    generate_input(N, M, T, &O, &PI, &A, &B, &FW, &BW, &C);
-
-    baum_welch(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
-}
-
-void test_mode(){
-    size_t N = 20;
-    size_t M = 20;
-    size_t T = 100;
-    size_t num_iter = 100;
 
     int* O;
     double *PI, *A, *B, *FW, *BW, *C;
@@ -38,7 +24,7 @@ void test_mode(){
     exit(1);
 }
 
-void runtime_mode(){
+void run_mode(){
     size_t N, M, T, num_iter;
     std::cin >> N >> M >> T >> num_iter;
     if(std::cin.fail() || std::cin.eof()){
@@ -46,7 +32,20 @@ void runtime_mode(){
         exit(2);
     }
 
-    std::cout << runtime(N, M, T, num_iter) << std::endl;
+    int* O;
+    double *PI, *A, *B, *FW, *BW, *C;
+
+    generate_input(N, M, T, &O, &PI, &A, &B, &FW, &BW, &C);
+
+    baum_welch(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
+
+    free(O);
+    free(PI);
+    free(A);
+    free(B);
+    free(FW);
+    free(BW);
+    free(C);
 
     exit(0);
 }
