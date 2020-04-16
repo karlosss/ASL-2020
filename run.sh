@@ -51,11 +51,9 @@ then
     read_input
     if taskset -c $(( number_of_cores-1 )) ./bin/validate debug <<< "$in" > /dev/null
     then
-        rm -rf logs/papi_hl_output-*
         echo "Successfully validated."
         exit 0
     else
-        rm -rf logs/papi_hl_output-*
         echo "!!! Validation error !!!"
         exit 1
     fi
