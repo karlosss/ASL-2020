@@ -91,8 +91,7 @@ bool compare_outputs(size_t N, size_t M, double* PI, double* A, double* B,
     nrm_sqr_diff(B, B2, N*M) < EPS;
 }
 
-void handle_error (int retval)
-{
-     printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
-     exit(1);
+void handle_error (int retval){
+    std::cout << "PAPI error " <<  retval << ": " << PAPI_strerror(retval) << std::endl;
+    exit(1);
 }

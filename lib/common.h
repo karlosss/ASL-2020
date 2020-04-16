@@ -2,7 +2,10 @@
 #define ASL_PROJECT_COMMON_H
 
 #include <bits/stdc++.h>
+#include <papi.h>
 
+#define REGION_BEGIN(name) for (int papi_retval = PAPI_hl_region_begin(#name); papi_retval != PAPI_OK; ) {handle_error(papi_retval); break;}
+#define REGION_END(name) for (int papi_retval = PAPI_hl_region_end(#name); papi_retval != PAPI_OK; ) {handle_error(papi_retval); break;}
 
 void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double** A, double** B, double** FW, double** BW, double** C);
 
