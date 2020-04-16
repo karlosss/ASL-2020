@@ -17,19 +17,13 @@ Prerequisities:
 - `gcc`
 - `cmake >= 3.10`
 - `make`
-- `PAPI == 6.0.0.1`
+- `git`
+- `sudo`
 
-## Installing PAPI
-
-    git clone https://bitbucket.org/icl/papi.git
-    cd papi/src
-    ./configure --prefix=INSTALL_DIR
-    make && make install
-    
 ## Compile and run
 Run `compile.sh` to compile all the binaries. After compilation, all of them are automatically tested. Old binaries are automatically pruned. 
 
 The `run.sh` has multiple modes:
 - `run.sh validate` - run validation of base implementation (specify input on stdin)
-- `run.sh execute BIN` - execute binary BIN in run mode and log measurements(specify input on stdin)
+- `run.sh BIN` - execute binary BIN in run mode and log measurements(specify input on stdin)
 - Input is 4 integers - N, M, T, num_iters - separated by a space

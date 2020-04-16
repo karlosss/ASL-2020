@@ -8,3 +8,4 @@ CMakeFiles
 bin/*
 logs/
 !bin/.gitkeep
+papi/
