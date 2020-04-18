@@ -45,7 +45,5 @@ It then displays a plot of the data of the just stored csv file.
 
 
 
-
-
 plot perf baum_welch_unroll4 N=(10,100,10) M=50, T=20, it=100
 
