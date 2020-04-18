@@ -37,7 +37,7 @@ fi
 
 echo "!!! Make sure you disabled TurboBoost via setup_scripts/turbo_boost.sh disable, I cannot check that for you !!!"
 
-export PAPI_EVENTS="PAPI_TOT_CYC,PAPI_REF_CYC,FP_ARITH:SCALAR_DOUBLE,FP:ARITH:256B_PACKED_DOUBLE,perf::CYCLES,perf::CPU-CLOCK,perf::TASK-CLOCK"
+export PAPI_EVENTS="PAPI_TOT_CYC,PAPI_REF_CYC,FP_ARITH:SCALAR_DOUBLE,FP_ARITH:256B_PACKED_DOUBLE,perf::CYCLES,perf::CPU-CLOCK,perf::TASK-CLOCK"
 export PAPI_OUTPUT_DIRECTORY="$PWD/logs"
 # Uncomment line below to see print output
 #export PAPI_REPORT="1"
