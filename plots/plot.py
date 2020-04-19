@@ -9,6 +9,21 @@ import random
 
 GENERATE = False
 
+def extract_data(data, x_axis, section="baum_welch", N=None, M=None, T=None):
+    if  x_axis == csv_cols.PARAM_N: 
+        fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
+    elif x_axis == csv_cols.PARAM_M: 
+        fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
+    elif x_axis == csv_cols.PARAM_T:
+        fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_M] == M
+    
+    section_constraint = data[csv_cols.SECTION] == section
+    return  data[fixed_0 & fixed_1 & section_constraint]
+
+    # plt.plot(extracted_data[x_axis], extracted_data[csv_cols.PERFORMANCE])
+    # plt.show()    
+
+
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
     cols = [
         csv_cols.BINARY, 
@@ -63,13 +78,13 @@ if __name__ == "__main__":
         )
         data.to_csv('data/dummie_df.csv', index=False)
 
-        data.to_csv('data/dummie_df.csv')
 
     data = pd.read_csv('data/dummie_df.csv')
-    print(data)
 
-    plt.rcParams.update(plt.rcParamsDefault)
-    plt.style.use('ggplot')
+    fixed_M = data[csv_cols.PARAM_M] == 6
+    fixed_T = data[csv_cols.PARAM_T] == 1
+    forward_vars = data[csv_cols.SECTION] == "forward_vars"
 
-    plt.plot(data[csv_cols.PARAM_N], data[csv_cols.PERFORMANCE])
-    plt.show()
+    
+
+    
