@@ -63,29 +63,46 @@ def append_csv(csv_path, lines, binary, flags, n, m, t, iter):
             csv.write(line)
 
 
+def get_flops_from_binary(binary, n, m, t, iters):
+    #call binary directly to get flop count
+    stream = os.popen('./bin/{0} flops <<< \"{1} {2} {3} {4}\"'.format(binary, n, m, t, iters))
+    exp_out = stream.read()
+
+    return int(exp_out)
+
 #Takes the path to PAPI logs, parses jsons and return a list of csv lines; one line for every region
-def get_data(json_path):
+def get_data(json_path, binary, n, m, t, iters):
     out=[]
     for file in os.scandir(json_path):
         with open(file) as f:
+            
             perf = json.load(f)
             regions = perf['threads'][0]['regions']
-            i=0
-            for r in regions:
 
-                name = REGIONS[i]
-                reg = r[name]
+            try:
+                i=0
+                for r in regions:
+
+                    name = REGIONS[i]
+                    reg = r[name]
+                    cycles = reg['cycles']  
+                    scalar = reg['FP_ARITH:SCALAR_DOUBLE']
+                    vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
+                    performance = str((scalar + 4*vectorized)/int(cycles))
+                    out.append('{0},{1},{2}'.format(name,cycles,performance))
+
+                    i=i+1
+
+            except KeyError:    
+                print("Your machine does not support PAPI FLOP counters, proceeding with less acurate count")
+                
+                name = REGIONS[0]
+                reg = regions[0][name]
                 cycles = reg['cycles']
-                
-                scalar = 1
-                #scalar = reg['FP_ARITH:SCALAR_DOUBLE']
-                vectorized = 0
-                #vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
-                performance = str((scalar + 4*vectorized)/int(cycles))
-               
+                flops = get_flops_from_binary(binary, n, m, t, iters)
+                performance=flops/int(cycles)
                 out.append('{0},{1},{2}'.format(name,cycles,performance))
-                
-                i=i+1
+               
     return out
 
 
@@ -108,7 +125,7 @@ def run_experiment(binary, flags, n, m, iters, t, csv_path):
         exp_out = exp.communicate(input=('{0} {1} {2} {3}'.format(n,m,iters,t)).encode('utf-8'))
 
         #retrieve data from PAPI json and form a comma separated value line
-        data = get_data('logs/papi_hl_output')
+        data = get_data('logs/papi_hl_output', binary, n, m, t, iters)
 
         #append the line to csv
         append_csv(csv_path, data, binary, flags, n, m, t, iters)
