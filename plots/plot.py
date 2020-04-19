@@ -9,12 +9,33 @@ import random
 
 GENERATE = False
 
-def extract_data(data, x_axis, section="baum_welch", N=None, M=None, T=None):
-    if  x_axis == csv_cols.PARAM_N: 
+
+def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
+    if x_axis == csv_cols.PARAM_N:
+        if M is None: 
+            M = data.max(axis=csv_cols.PARAM_M)
+            print(f"Warning: No M specified. Setting M := {M}")
+        if T is None: 
+            T = data.max(axis=csv_cols.PARAM_T)
+            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
+
     elif x_axis == csv_cols.PARAM_M: 
+        if N is None: 
+            N = data.max(axis=csv_cols.PARAM_N)
+            print(f"Warning: No N specified. Setting N := {N}")
+        if T is None: 
+            T = data.max(axis=csv_cols.PARAM_T)
+            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
+
     elif x_axis == csv_cols.PARAM_T:
+        if M is None: 
+            M = data.max(axis=csv_cols.PARAM_M)
+            print(f"Warning: No M specified. Setting M := {M}")
+        if N is None: 
+            N = data.max(axis=csv_cols.PARAM_N)
+            print(f"Warning: No N specified. Setting N := {N}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_M] == M
     
     section_constraint = data[csv_cols.SECTION] == section
@@ -22,6 +43,7 @@ def extract_data(data, x_axis, section="baum_welch", N=None, M=None, T=None):
 
     # plt.plot(extracted_data[x_axis], extracted_data[csv_cols.PERFORMANCE])
     # plt.show()    
+
 
 
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
