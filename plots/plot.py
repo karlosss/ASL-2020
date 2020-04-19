@@ -82,6 +82,7 @@ def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch
     
 
 
+
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
     cols = [
         csv_cols.BINARY, 
