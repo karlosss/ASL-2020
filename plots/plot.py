@@ -9,12 +9,33 @@ import random
 
 GENERATE = False
 
-def extract_data(data, x_axis, section="baum_welch", N=None, M=None, T=None):
-    if  x_axis == csv_cols.PARAM_N: 
+
+def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
+    if x_axis == csv_cols.PARAM_N:
+        if M is None: 
+            M = data[csv_cols.PARAM_M].max()
+            print(f"Warning: No M specified. Setting M := {M}")
+        if T is None: 
+            T = data[csv_cols.PARAM_T].max()
+            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
+
     elif x_axis == csv_cols.PARAM_M: 
+        if N is None: 
+            N = data[csv_cols.PARAM_N].max()
+            print(f"Warning: No N specified. Setting N := {N}")
+        if T is None: 
+            T = data[csv_cols.PARAM_T].max()
+            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
+
     elif x_axis == csv_cols.PARAM_T:
+        if M is None: 
+            M = data[csv_cols.PARAM_M].max()
+            print(f"Warning: No M specified. Setting M := {M}")
+        if N is None: 
+            N = data[csv_cols.PARAM_N].max()
+            print(f"Warning: No N specified. Setting N := {N}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_M] == M
     
     section_constraint = data[csv_cols.SECTION] == section
@@ -22,6 +43,7 @@ def extract_data(data, x_axis, section="baum_welch", N=None, M=None, T=None):
 
     # plt.plot(extracted_data[x_axis], extracted_data[csv_cols.PERFORMANCE])
     # plt.show()    
+
 
 
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
@@ -84,6 +106,8 @@ if __name__ == "__main__":
     fixed_M = data[csv_cols.PARAM_M] == 6
     fixed_T = data[csv_cols.PARAM_T] == 1
     forward_vars = data[csv_cols.SECTION] == "forward_vars"
+
+    extract_data(data, csv_cols.PARAM_N)
 
     
 
