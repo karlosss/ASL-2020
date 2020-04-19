@@ -61,6 +61,7 @@ if __name__ == "__main__":
                 "update_emission"
             ]
         )
+        data.to_csv('data/dummie_df.csv', index=False)
 
         data.to_csv('data/dummie_df.csv')
 
