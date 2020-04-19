@@ -10,8 +10,7 @@ import json
 
 #GLOBALS
 CSV_HEADER='Binary, Flags, N, M, T, Iterations, Section, Cycles, Performance\n'
-DEBUG=0
-T_FACTOR=100
+T_FACTOR=10000
 REGIONS=['baum_welch','forward_vars','backward_vars','update_initial','update_transition','update_emission']
 #########################
 
@@ -36,10 +35,9 @@ def read_input():
 #returns the path to the csv
 def create_csv(binary, flags, csv_header):
 
-    print(flags)
     #make string of flags
     flag_string= ('_').join(flags.split(' '))
-    print(flag_string)
+
     #create name for csv
     csv_name=str("{0}%{1}.csv".format(binary, flag_string))
 
@@ -69,7 +67,6 @@ def get_data(json_path):
     for file in os.scandir(json_path):
         with open(file) as f:
             perf = json.load(f)
-            if DEBUG: print(perf)
             regions = perf['threads'][0]['regions']
             i=0
             for r in regions:
@@ -96,7 +93,6 @@ def compile_all(flags):
     print("Compiling with {0}".format(flags))
     #append "-" to flags
     flags = ['-{0}'.format(f) for f in flags.split(' ')]
-    print(flags)
     #call compile.sh
     comp = subprocess.Popen(['./compile.sh'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
 
