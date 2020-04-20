@@ -9,6 +9,15 @@ import random
 
 GENERATE = False
 
+SECTIONS = [
+    'baum_welch',
+    'forward_vars',
+    'backward_vars',
+    'update_initial',
+    'update_transition',
+    'update_emission'
+] 
+
 
 def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
     if x_axis == csv_cols.PARAM_N:
@@ -41,45 +50,62 @@ def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch"
     section_constraint = data[csv_cols.SECTION] == section
     return  data[fixed_0 & fixed_1 & section_constraint]
 
-    # plt.plot(extracted_data[x_axis], extracted_data[csv_cols.PERFORMANCE])
-    # plt.show()    
 
-def plot_perf_NMT(data, title, N, M, T):
+def plot_regions_pie(ax, data, title):
+    N_max = data[csv_cols.PARAM_N].max()
+    M_max = data[csv_cols.PARAM_M].max()
+    T_max = data[csv_cols.PARAM_T].max()
+
+    region_perf = data[
+          (data[csv_cols.PARAM_N] == N_max)
+        & (data[csv_cols.PARAM_M] == M_max)
+        & (data[csv_cols.PARAM_T] == T_max)
+    ]
+    
+    ax.set_title(title)
+    ax.pie(region_perf[csv_cols.PERFORMANCE], labels=region_perf[csv_cols.SECTION])
+
+
+def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=False):
     plt.figure(figsize=(20, 10), facecolor='w')
     ax_N = plt.subplot(1, 3, 1)
     ax_M = plt.subplot(1, 3, 2)
     ax_T = plt.subplot(1, 3, 3)
-    plot_N_P(ax_N, data, "Plot N", M, T)
-    plot_M_P(ax_M, data, "Plot M", N, T)
-    plot_T_P(ax_T, data, "Plot T", N, M)
+
+
+    sections = SECTIONS if all_sections else ["baum_welch"]
+    plot_N_P(ax_N, data, "Plot N", M, T, sections=sections)
+    plot_M_P(ax_M, data, "Plot M", N, T, sections=sections)
+    plot_regions_pie(ax_T, data, "Section")
     plt.show()
     return
 
-def plot_N_P(ax, data, title, M, T):
+
+def plot_N_P(ax, data, title, M, T, sections=["baum_welch"]):
     ax.set_title(title)
-    plot_data(ax, data, csv_cols.PARAM_N, csv_cols.PERFORMANCE, section="baum_welch", M=M, T=T)
+    plot_data(ax, data, csv_cols.PARAM_N, csv_cols.PERFORMANCE, sections=sections, M=M, T=T)
 
     
-def plot_M_P(ax, data, title, N, T):
+def plot_M_P(ax, data, title, N, T, sections=["baum_welch"]):
     ax.set_title(title)
-    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, section="baum_welch", N=N, T=T)
+    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, T=T)
 
 
-def plot_T_P(ax, data, title, N, M):
+def plot_T_P(ax, data, title, N, M, sections=["baum_welch"]):
     ax.set_title(title)
-    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, section="baum_welch", N=N, M=M)
+    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, M=M)
 
 
-def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
-    extracted_data = extract_data(data, x_axis, y_axis, section, N, M, T)
-    # ax.set_title(extracted_data[csv_cols.BINARY].iloc[0])
-    ax.set_xlabel(x_axis)
-    ax.set_ylabel(f"Perf [F/C]", rotation=0)
-    ax.yaxis.set_label_coords(-0.05, 1.0)
+def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, sections=["baum_welch"], N=None, M=None, T=None):
+    for section in sections:
+        extracted_data = extract_data(data, x_axis, y_axis, section, N, M, T)
+        # ax.set_title(extracted_data[csv_cols.BINARY].iloc[0])
+        ax.set_xlabel(x_axis)
+        ax.set_ylabel(f"Perf [F/C]", rotation=0)
+        ax.yaxis.set_label_coords(-0.05, 1.0)
+        ax.set_xticks(extracted_data[x_axis])
+        ax.plot(extracted_data[x_axis], extracted_data[y_axis])
     ax.grid(axis='x')
-    ax.set_xticks(extracted_data[x_axis])
-    ax.plot(extracted_data[x_axis], extracted_data[y_axis])
-    
 
 
 
@@ -138,12 +164,12 @@ if __name__ == "__main__":
         data.to_csv('data/dummie_df.csv', index=False)
 
 
-    data = pd.read_csv('data/dummie_df.csv')
+    data = pd.read_csv('../output_data/no_opt%O0.csv')
 
     plt.rcParams.update(plt.rcParamsDefault)
     plt.style.use('ggplot')
 
-    plot_perf_NMT(data, "Performance Plot Variants", N=4, M=6, T=1)
+    plot_perf_NM_and_section_pie_chart(data, "Performance Plot Variants", N=20, M=50, all_sections=True)
 
     
 

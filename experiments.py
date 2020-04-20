@@ -4,13 +4,14 @@
 import argparse
 import datetime
 import os
+import glob
 import subprocess
 import json
 #########################
 
 #GLOBALS
-CSV_HEADER='Binary, Flags, N, M, T, Iterations, Section, Cycles, Performance\n'
-T_FACTOR=10000
+CSV_HEADER='Binary,Flags,N,M,T,Iterations,Section,Cycles,Performance\n'
+T_FACTOR=100
 REGIONS=['baum_welch','forward_vars','backward_vars','update_initial','update_transition','update_emission']
 #########################
 
@@ -25,6 +26,7 @@ def read_input():
     parser.add_argument('-m_max',help='The maximum value for M, 21 if none specified',dest='m_max',default=21)
     parser.add_argument('-m_step',help='The stepping value for M, 10 if none specified',dest='m_step',default=10)
     parser.add_argument('-i',help='The number of iterations, 50 if none specified',dest= 'iters', default=50)
+    parser.add_argument('-t_min',help='The minimum value of T (min is 10000*min(N_max,M_max))',dest='t_max',default=0)
     parser.add_argument('-t_max',help='The maximal value of T (min is 10000*min(N_max,M_max))',dest='t_max',default=0)
     parser.add_argument('-t_step',help='The stepping value of T, default is 10',default=10)
     parser.add_argument('-f',help='The flags to use for compilation (as a single string, and without leading "-", i.e. O0 fno-tree-vectorize), default is -O0',dest='flags',default='O0')
@@ -88,7 +90,7 @@ def get_data(json_path, binary, n, m, t, iters):
                     cycles = reg['cycles']  
                     scalar = reg['FP_ARITH:SCALAR_DOUBLE']
                     vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
-                    performance = str((scalar + 4*vectorized)/int(cycles))
+                    performance = str(int(scalar + 4*vectorized)/int(cycles))
                     out.append('{0},{1},{2}'.format(name,cycles,performance))
 
                     i=i+1
@@ -102,7 +104,10 @@ def get_data(json_path, binary, n, m, t, iters):
                 flops = get_flops_from_binary(binary, n, m, t, iters)
                 performance=flops/int(cycles)
                 out.append('{0},{1},{2}'.format(name,cycles,performance))
-               
+
+    files = glob.glob(f"{json_path}/*")
+    for f in files:
+        os.remove(f)
     return out
 
 
@@ -161,4 +166,16 @@ if __name__=='__main__':
     t_min = T_FACTOR*int(args.m_max) if int(args.m_max)<int(args.n_max) else T_FACTOR*int(args.n_max)
     t_max = int(args.t_max) if int(args.t_max) > int(t_min) else int(t_min)+1
 
-    main(args.bin, int(args.n_min), int(args.n_max), int(args.n_step), int(args.m_min), int(args.m_max), int(args.m_step), int(args.iters),int(t_min), int(t_max), int(args.t_step), args.flags)
+    main(
+        args.bin, 
+        int(args.n_min), 
+        int(args.n_max), 
+        int(args.n_step), 
+        int(args.m_min), 
+        int(args.m_max), 
+        int(args.m_step), 
+        int(args.iters),
+        int(t_min), 
+        int(t_max), 
+        int(args.t_step), 
+        args.flags)
