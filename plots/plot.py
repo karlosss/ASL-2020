@@ -24,6 +24,15 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
+def extract_N_plot_data(data, M, T, section="baum_welch"):
+    M_constraint, T_constraint = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
+    return data[M_constraint & T_constraint]
+
+def extract_M_plot_data(data, N, T, section="baum_welch"):
+    N_constraint, T_constraint = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
+    return data[N_constraint & T_constraint]
+    
+
 def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
     if x_axis == csv_cols.PARAM_N:
         fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
@@ -50,7 +59,9 @@ def plot_regions_pie(ax, data, title):
     ]
     
     ax.set_title(title)
-    ax.pie(region_perf[csv_cols.PERFORMANCE], labels=region_perf[csv_cols.SECTION])
+    _, _, autotexts = ax.pie(region_perf[csv_cols.PERFORMANCE], labels=region_perf[csv_cols.SECTION], autopct='%1.1f%%')
+    for autotext in autotexts:
+        autotext.set_color('white')
 
 
 def adjust_param(data, param, value):
@@ -72,7 +83,13 @@ def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=F
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
     T = adjust_param(data, csv_cols.PARAM_T, T)
-    plt.figure(figsize=(20, 10), facecolor='w')
+    plt.figure(figsize=(15, 6), facecolor='w')
+    binary_name = data[csv_cols.BINARY].iloc[0]
+    flags = data[csv_cols.FLAGS].iloc[0]
+
+    fig = plt.gcf()
+    fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
+
     ax_N = plt.subplot(1, 3, 1)
     ax_M = plt.subplot(1, 3, 2)
     ax_T = plt.subplot(1, 3, 3)
@@ -81,7 +98,31 @@ def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=F
     sections = SECTIONS if all_sections else ["baum_welch"]
     plot_N_P(ax_N, data, "Plot N", M, T, sections=sections)
     plot_M_P(ax_M, data, "Plot M", N, T, sections=sections)
-    plot_regions_pie(ax_T, data, "Section")
+    plot_regions_pie(ax_T, data, "Sections")
+
+    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    plt.show()
+    return
+
+
+def plot_perf_NM(data, title, N, M, T=None):
+    N = adjust_param(data, csv_cols.PARAM_N, N)
+    M = adjust_param(data, csv_cols.PARAM_M, M)
+    T = adjust_param(data, csv_cols.PARAM_T, T)
+    plt.figure(figsize=(15, 6), facecolor='w')
+    binary_name = data[csv_cols.BINARY].iloc[0]
+    flags = data[csv_cols.FLAGS].iloc[0]
+
+    fig = plt.gcf()
+    fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
+
+    ax_N = plt.subplot(1, 2, 1)
+    ax_M = plt.subplot(1, 2, 2)
+
+    plot_N_P(ax_N, data, "Plot N", M, T)
+    plot_M_P(ax_M, data, "Plot M", N, T)
+
+    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     plt.show()
     return
 
@@ -110,10 +151,18 @@ def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, sections=["baum_wel
         ax.set_ylabel(f"Perf [F/C]", rotation=0)
         ax.yaxis.set_label_coords(-0.05, 1.0)
         ax.set_xticks(extracted_data[x_axis])
-        ax.plot(extracted_data[x_axis], extracted_data[y_axis], label=section)
+        ax.plot(extracted_data[x_axis], extracted_data[y_axis], '-o', label=section)
     ax.grid(axis='x')
     ax.legend(loc='lower right')
 
+
+# def compare_data(csv_files):
+#     ax_N = plt.subplot(1, 2, 1)
+#     ax_M = plt.subplot(1, 2, 2)
+
+#     for csv_file in csv_files:
+#         data = pd.read_csv(csv_file)
+#         plot_N_P(ax_N, data, )
 
 
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
@@ -172,6 +221,7 @@ if __name__ == "__main__":
 
 
     data = pd.read_csv('../output_data/no_opt%O0.csv')
+    data2 = pd.read_csv('../output_data/no_opt%-O3.csv')
 
     plt.rcParams.update(plt.rcParamsDefault)
     plt.style.use('ggplot')
