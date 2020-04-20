@@ -2,6 +2,7 @@
 
 import os
 import sys
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import csv_cols
@@ -18,33 +19,19 @@ SECTIONS = [
     'update_emission'
 ] 
 
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx]
 
 def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
     if x_axis == csv_cols.PARAM_N:
-        if M is None: 
-            M = data[csv_cols.PARAM_M].max()
-            print(f"Warning: No M specified. Setting M := {M}")
-        if T is None: 
-            T = data[csv_cols.PARAM_T].max()
-            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
 
     elif x_axis == csv_cols.PARAM_M: 
-        if N is None: 
-            N = data[csv_cols.PARAM_N].max()
-            print(f"Warning: No N specified. Setting N := {N}")
-        if T is None: 
-            T = data[csv_cols.PARAM_T].max()
-            print(f"Warning: No T specified. Setting T := {T}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
 
     elif x_axis == csv_cols.PARAM_T:
-        if M is None: 
-            M = data[csv_cols.PARAM_M].max()
-            print(f"Warning: No M specified. Setting M := {M}")
-        if N is None: 
-            N = data[csv_cols.PARAM_N].max()
-            print(f"Warning: No N specified. Setting N := {N}")
         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_M] == M
     
     section_constraint = data[csv_cols.SECTION] == section
@@ -66,7 +53,25 @@ def plot_regions_pie(ax, data, title):
     ax.pie(region_perf[csv_cols.PERFORMANCE], labels=region_perf[csv_cols.SECTION])
 
 
+def adjust_param(data, param, value):
+    vals = data[param].unique()
+    if value is None:
+        max_val = vals.max()
+        print(f"Parameter {param} not specified. Setting {param}:={max_val} (max value)")
+        return max_val
+    elif value not in vals:
+        nearest_val = find_nearest(vals, value)
+        print(f"No data found for {param}={value}. Setting {param}:={nearest_val} (nearest value)")
+        return nearest_val
+    else:
+        return value
+
+
+
 def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=False):
+    N = adjust_param(data, csv_cols.PARAM_N, N)
+    M = adjust_param(data, csv_cols.PARAM_M, M)
+    T = adjust_param(data, csv_cols.PARAM_T, T)
     plt.figure(figsize=(20, 10), facecolor='w')
     ax_N = plt.subplot(1, 3, 1)
     ax_M = plt.subplot(1, 3, 2)
@@ -82,18 +87,19 @@ def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=F
 
 
 def plot_N_P(ax, data, title, M, T, sections=["baum_welch"]):
-    ax.set_title(title)
+    ax.set_title(f"M = {M}, T = {T}")
     plot_data(ax, data, csv_cols.PARAM_N, csv_cols.PERFORMANCE, sections=sections, M=M, T=T)
 
     
 def plot_M_P(ax, data, title, N, T, sections=["baum_welch"]):
-    ax.set_title(title)
+    ax.set_title(f"M = {N}, T = {T}")
     plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, T=T)
 
 
 def plot_T_P(ax, data, title, N, M, sections=["baum_welch"]):
     ax.set_title(title)
     plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, M=M)
+
 
 
 def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, sections=["baum_welch"], N=None, M=None, T=None):
@@ -104,8 +110,9 @@ def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, sections=["baum_wel
         ax.set_ylabel(f"Perf [F/C]", rotation=0)
         ax.yaxis.set_label_coords(-0.05, 1.0)
         ax.set_xticks(extracted_data[x_axis])
-        ax.plot(extracted_data[x_axis], extracted_data[y_axis])
+        ax.plot(extracted_data[x_axis], extracted_data[y_axis], label=section)
     ax.grid(axis='x')
+    ax.legend(loc='lower right')
 
 
 
@@ -169,7 +176,7 @@ if __name__ == "__main__":
     plt.rcParams.update(plt.rcParamsDefault)
     plt.style.use('ggplot')
 
-    plot_perf_NM_and_section_pie_chart(data, "Performance Plot Variants", N=20, M=50, all_sections=True)
+    plot_perf_NM_and_section_pie_chart(data, "Performance Plot Variants", N=27, M=37, all_sections=True)
 
     
 
