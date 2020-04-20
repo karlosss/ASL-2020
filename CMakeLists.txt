@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(asl_project)
-set(CMAKE_CXX_FLAGS "-O3 -std=c++17 -Wall -pedantic -Wextra")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
+set(CMAKE_CXX_FLAGS "-std=c++17 -Wall -pedantic -Wextra ${FLAGS}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin/${COMPILER}_${UNDERSCORED_FLAGS})
+set(CMAKE_CXX_COMPILER ${COMPILER})
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${CMAKE_CURRENT_SOURCE_DIR}")
 set(PAPI_INCLUDE_DIRS ${CMAKE_MODULE_PATH}/papi/include)
 set(PAPI_LIBRARIES ${CMAKE_MODULE_PATH}/papi/lib/libpapi.so.6.0.0.1)

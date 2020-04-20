@@ -2,14 +2,13 @@
 
 print_usage () {
     echo "Usage:" >&2
-    echo "$0 validate - run validation of base implementation (specify input on stdin)" >&2
-    echo "$0 BIN - execute binary BIN in run mode and log measurements(specify input on stdin)" >&2
+    echo "$0 validate COMPILER [FLAGS...] - run validation of base implementation (specify input on stdin)" >&2
+    echo "$0 BIN COMPILER [FLAGS...] - execute binary BIN in run mode and log measurements(specify input on stdin)" >&2
     echo "input is 4 integers - N, M, T, num_iters - separated by a space"
     exit 2
 }
 
 read_input () {
-    echo "Awaiting input (N, M, T, num_iters)"
     read -r in
 }
 
@@ -46,10 +45,33 @@ log_dir="$PAPI_OUTPUT_DIRECTORY/papi_hl_output"
 number_of_cores=$(grep -c ^processor /proc/cpuinfo)
 in=""
 
+binary="$1"
+
 if [[ "$1" = "validate" ]]
 then
-    read_input
-    if taskset -c $(( number_of_cores-1 )) ./bin/validate debug <<< "$in" > /dev/null
+  run_mode="debug"
+else
+  run_mode="execute"
+fi
+
+shift
+compiler="$1"
+shift
+flags="$*"
+underscored_flags=${flags// /_}
+
+binary="bin/${compiler}_$underscored_flags/$binary"
+
+if ! [[ -f "$binary" ]]
+then
+    print_not_found "$binary"
+fi
+
+read_input
+
+if [[ "$run_mode" = "debug" ]]
+then
+    if taskset -c $(( number_of_cores-1 )) "$binary" "$run_mode" <<< "$in" > /dev/null
     then
         echo "Successfully validated."
         exit 0
@@ -58,12 +80,7 @@ then
         exit 1
     fi
 else
-    read_input
-    if ! [[ -f "bin/$1" ]]
-    then
-        print_not_found "$1"
-    fi
-    taskset -c $(( number_of_cores-1 )) ./bin/"$1" "execute" <<< "$in"
+    taskset -c $(( number_of_cores-1 )) "$binary" "$run_mode" <<< "$in"
     rm -rf logs/papi_hl_output-*
     echo "Outputs written to" logs/papi_hl_output/*
     parse_json
