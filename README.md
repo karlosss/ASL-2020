@@ -27,3 +27,12 @@ The `run.sh` has multiple modes:
 - `run.sh validate` - run validation of base implementation (specify input on stdin)
 - `run.sh BIN` - execute binary BIN in run mode and log measurements(specify input on stdin)
 - Input is 4 integers - N, M, T, num_iters - separated by a space
+
+
+## Plotting
+A performance plot is generated automatically after a run of `experiments.py`.
+Run `plot.py` to generate plot comparing the performance measurements already measured from previous runs of `experiments.py`. The options are:
+- `-f FILELIST`: Compare the performances of all .csv files in the comma separated list `FILELIST`.
+- `-d DIRECTORY`: Compare the performances of all .csv files inside `DIRECTORY`.
+
+If no arguments are given the folder `./output_dir` is used as the directory.
