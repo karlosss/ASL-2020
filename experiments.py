@@ -8,7 +8,7 @@ import glob
 import subprocess
 import json
 import plot
-from plots.constants import OUTPUT_DIR
+from python_lib.constants import OUTPUT_DIR
 #########################
 
 #GLOBALS

@@ -5,8 +5,8 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import plots.csv_cols as csv_cols
-import plots.constants as constants
+import python_lib.csv_cols as csv_cols
+import python_lib.constants as constants
 import random
 import argparse
 
@@ -113,8 +113,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
-        print(csv_file)
-        print(data.head())
+        
         N = adjust_param(data, csv_cols.PARAM_N, N)
         M = adjust_param(data, csv_cols.PARAM_M, M)
         T = adjust_param(data, csv_cols.PARAM_T, T)
@@ -124,7 +123,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
 
         x_NP, y_NP = extract_NP_data(data, M, T, section="baum_welch")
         x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
-        print(x_NP)
+
         ax_NP.plot(x_NP, y_NP, label=label)
         ax_MP.plot(x_MP, y_MP, label=label)
 
@@ -191,9 +190,6 @@ def plot_regions_pie(ax, data, title):
 
 if __name__ == "__main__":
 
-    data = pd.read_csv('./output_data/no_opt%O0.csv')
-    data2 = pd.read_csv('./output_data/no_opt%-O3.csv')
-    
     parser = argparse.ArgumentParser(description='Compare the performance of the specified experiments')
 
     parser.add_argument('--csv_files', '-f', nargs='+', help='A list of csv files with data to compare.')
