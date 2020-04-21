@@ -5,8 +5,10 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import csv_cols
+import plots.csv_cols as csv_cols
+import plots.constants as constants
 import random
+import argparse
 
 
 SECTIONS = [
@@ -17,6 +19,9 @@ SECTIONS = [
     'update_transition',
     'update_emission'
 ] 
+
+plt.rcParams.update(plt.rcParamsDefault)
+plt.style.use('ggplot')
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -97,7 +102,7 @@ def plot_MP_sections(ax, data, N, T, sections=SECTIONS):
     )
 
 
-def multiplot_NP_M_comparison(csv_files, N, M, T=None):
+def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.figure(figsize=(15, 6), facecolor='w')
 
     fig = plt.gcf()
@@ -140,7 +145,8 @@ def multiplot_NP_M_comparison(csv_files, N, M, T=None):
     plt.show()
 
 
-def multiplot_NP_MP_S(data, N, M, T=None):
+def multiplot_NP_MP_S(csv_file, N=None, M=None, T=None):
+    data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
     T = adjust_param(data, csv_cols.PARAM_T, T)
@@ -185,17 +191,28 @@ def plot_regions_pie(ax, data, title):
 
 if __name__ == "__main__":
 
-    data = pd.read_csv('../output_data/no_opt%O0.csv')
-    data2 = pd.read_csv('../output_data/no_opt%-O3.csv')
+    data = pd.read_csv('./output_data/no_opt%O0.csv')
+    data2 = pd.read_csv('./output_data/no_opt%-O3.csv')
+    
+    parser = argparse.ArgumentParser(description='Compare the performance of the specified experiments')
 
-    plt.rcParams.update(plt.rcParamsDefault)
-    plt.style.use('ggplot')
+    parser.add_argument('--csv_files', '-f', nargs='+', help='A list of csv files with data to compare.')
+    parser.add_argument('--directory', '-d', help='Directory containing csv files with data to compare.')
+    
+    args = parser.parse_args()
+    csv_files = []
+    directory = None
+    if (args.csv_files is not None):
+        csv_files = args.csv_files
+    else:
+        if (args.directory is not None):
+            directory = args.directory
+        else:
+            print(f"No arguments specified. Comparing all csv files in directory '{constants.OUTPUT_DIR}'.")
+            directory = constants.OUTPUT_DIR
 
-    # plot_perf_NM_and_section_pie_chart(data, "Performance Plot Variants", N=27, M=37, all_sections=True)
+        for filename in os.listdir(directory):
+            if filename.endswith(".csv"):
+                csv_files.append(os.path.join(directory, filename))
 
-    # multiplot_NP_MP_S(data,  N=27, M=37)
-    multiplot_NP_M_comparison([
-        '../output_data/no_opt%O0.csv',
-        '../output_data/no_opt%-O3.csv'
-    ],
-    N=27, M=37)
+    multiplot_NP_M_comparison(csv_files)

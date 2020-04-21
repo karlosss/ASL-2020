@@ -1,4 +1,4 @@
-#! /usr/bin/env python3.7
+#! /usr/bin/env python3
 
 #IMPORTS
 import argparse
@@ -7,12 +7,15 @@ import os
 import glob
 import subprocess
 import json
+import plot
+from plots.constants import OUTPUT_DIR
 #########################
 
 #GLOBALS
 CSV_HEADER='Binary,Flags,N,M,T,Iterations,Section,Cycles,Performance\n'
 T_FACTOR=100
 REGIONS=['baum_welch','forward_vars','backward_vars','update_initial','update_transition','update_emission']
+
 #########################
 
 def read_input():
@@ -45,7 +48,7 @@ def create_csv(binary, flags, csv_header):
 
     #get absolute path for csv
     path = os.path.dirname(__file__)
-    path = os.path.join(path,'output_data')
+    path = os.path.join(path, OUTPUT_DIR)
     if not os.path.exists(path):
         os.makedirs(path)
     csv_path = os.path.join(path,csv_name)
@@ -158,6 +161,8 @@ def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max
     
     print("All experiments done")
     print("Find your output in: {0}".format(csv_path))
+    plot.multiplot_NP_MP_S(csv_path)
+    
 
 
 if __name__=='__main__':
