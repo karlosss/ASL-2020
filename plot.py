@@ -2,7 +2,6 @@
 
 import os
 import sys
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import python_lib.csv_cols as csv_cols
@@ -113,7 +112,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
-        
+
         N = adjust_param(data, csv_cols.PARAM_N, N)
         M = adjust_param(data, csv_cols.PARAM_M, M)
         T = adjust_param(data, csv_cols.PARAM_T, T)
