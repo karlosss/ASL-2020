@@ -8,13 +8,23 @@ import glob
 import subprocess
 import json
 import plot
-from python_lib.constants import OUTPUT_DIR
+import python_lib.csv_cols as csv_cols
+from python_lib.constants import OUTPUT_DIR, SECTIONS 
 #########################
 
 #GLOBALS
-CSV_HEADER='Binary,Flags,N,M,T,Iterations,Section,Cycles,Performance\n'
+CSV_HEADER=(
+    f"{csv_cols.BINARY},"
+    f"{csv_cols.FLAGS},"
+    f"{csv_cols.PARAM_N},"
+    f"{csv_cols.PARAM_M},"
+    f"{csv_cols.PARAM_T},"
+    f"{csv_cols.NUM_ITERATIONS},"
+    f"{csv_cols.SECTION},"
+    f"{csv_cols.NUM_CYCLES},"
+    f"{csv_cols.PERFORMANCE}\n"
+)
 T_FACTOR=100
-REGIONS=['baum_welch','forward_vars','backward_vars','update_initial','update_transition','update_emission']
 
 #########################
 
@@ -88,7 +98,7 @@ def get_data(json_path, binary, n, m, t, iters):
                 i=0
                 for r in regions:
 
-                    name = REGIONS[i]
+                    name = SECTIONS[i]
                     reg = r[name]
                     cycles = reg['cycles']  
                     scalar = reg['FP_ARITH:SCALAR_DOUBLE']
@@ -101,7 +111,7 @@ def get_data(json_path, binary, n, m, t, iters):
             except KeyError:    
                 print("Your machine does not support PAPI FLOP counters, proceeding with less acurate count")
                 
-                name = REGIONS[0]
+                name = SECTIONS[0]
                 reg = regions[0][name]
                 cycles = reg['cycles']
                 flops = get_flops_from_binary(binary, n, m, t, iters)
