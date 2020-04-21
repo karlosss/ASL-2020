@@ -40,13 +40,6 @@ def extract_MP_data(data, N, T, section):
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
 
-# def sections_data_generator_NP(data, M, T):
-#     return (extract_NP_data(data, M, T, section) for section in SECTIONS)
-    
-    
-# def sections_data_generator_NP(data, M, T):
-#     return (extract_NP_data(data, M, T, section) for section in SECTIONS)
-
 
 def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
@@ -86,7 +79,6 @@ def get_experiment_info(data):
     return data[csv_cols.BINARY].iloc[0], data[csv_cols.FLAGS].iloc[0]
 
 
-
 # def plot_NP_comparison(ax, data_it):
 #     # ax formatting
 #     for data in data_it:
@@ -119,24 +111,6 @@ def plot_NP_MP_S(data, title, N, M, T=None):
     plt.show()
     return
 
-# def extract_M_plot_data(data, N, T, section="baum_welch"):
-#     N_constraint, T_constraint = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
-#     return data[N_constraint & T_constraint]
-    
-
-# def extract_data(data, x_axis, y_axis=csv_cols.PERFORMANCE, section="baum_welch", N=None, M=None, T=None):
-#     if x_axis == csv_cols.PARAM_N:
-#         fixed_0, fixed_1 = data[csv_cols.PARAM_M] == M, data[csv_cols.PARAM_T] == T
-
-#     elif x_axis == csv_cols.PARAM_M: 
-#         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_T] == T
-
-#     elif x_axis == csv_cols.PARAM_T:
-#         fixed_0, fixed_1 = data[csv_cols.PARAM_N] == N, data[csv_cols.PARAM_M] == M
-    
-#     section_constraint = data[csv_cols.SECTION] == section
-#     return  data[fixed_0 & fixed_1 & section_constraint]
-
 
 def plot_regions_pie(ax, data, title):
     N_max = data[csv_cols.PARAM_N].max()
@@ -155,8 +129,6 @@ def plot_regions_pie(ax, data, title):
         autotext.set_color('white')
 
 
-
-
 def adjust_param(data, param, value):
     vals = data[param].unique()
     if value is None:
@@ -170,99 +142,6 @@ def adjust_param(data, param, value):
     else:
         return value
 
-
-
-def plot_perf_NM_and_section_pie_chart(data, title, N, M, T=None, all_sections=False):
-    N = adjust_param(data, csv_cols.PARAM_N, N)
-    M = adjust_param(data, csv_cols.PARAM_M, M)
-    T = adjust_param(data, csv_cols.PARAM_T, T)
-    plt.figure(figsize=(15, 6), facecolor='w')
-    binary_name = data[csv_cols.BINARY].iloc[0]
-    flags = data[csv_cols.FLAGS].iloc[0]
-
-    fig = plt.gcf()
-    fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
-
-    ax_N = plt.subplot(1, 3, 1)
-    ax_M = plt.subplot(1, 3, 2)
-    ax_T = plt.subplot(1, 3, 3)
-
-
-    sections = SECTIONS if all_sections else ["baum_welch"]
-    plot_N_P(ax_N, data, "Plot N", M, T, sections=sections)
-    plot_M_P(ax_M, data, "Plot M", N, T, sections=sections)
-    plot_regions_pie(ax_T, data, "Sections")
-
-    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    plt.show()
-    return
-
-
-def plot_perf_NM(data, title, N, M, T=None):
-    N = adjust_param(data, csv_cols.PARAM_N, N)
-    M = adjust_param(data, csv_cols.PARAM_M, M)
-    T = adjust_param(data, csv_cols.PARAM_T, T)
-    plt.figure(figsize=(15, 6), facecolor='w')
-    binary_name = data[csv_cols.BINARY].iloc[0]
-    flags = data[csv_cols.FLAGS].iloc[0]
-
-    fig = plt.gcf()
-    fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
-
-    ax_N = plt.subplot(1, 2, 1)
-    ax_M = plt.subplot(1, 2, 2)
-
-    plot_N_P(ax_N, data, "Plot N", M, T)
-    plot_M_P(ax_M, data, "Plot M", N, T)
-
-    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    plt.show()
-    return
-
-
-def plot_N_P(ax, data, title, M, T, sections=["baum_welch"]):
-    ax.set_title(f"M = {M}, T = {T}")
-    plot_data(ax, data, csv_cols.PARAM_N, csv_cols.PERFORMANCE, sections=sections, M=M, T=T)
-
-    
-def plot_M_P(ax, data, title, N, T, sections=["baum_welch"]):
-    ax.set_title(f"M = {N}, T = {T}")
-    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, T=T)
-
-
-def plot_T_P(ax, data, title, N, M, sections=["baum_welch"]):
-    ax.set_title(title)
-    plot_data(ax, data, csv_cols.PARAM_M, csv_cols.PERFORMANCE, sections=sections, N=N, M=M)
-
-
-
-def plot_data(ax, data, x_axis, y_axis=csv_cols.PERFORMANCE, sections=["baum_welch"], N=None, M=None, T=None):
-    for section in sections:
-        extracted_data = extract_data(data, x_axis, y_axis, section, N, M, T)
-        # ax.set_title(extracted_data[csv_cols.BINARY].iloc[0])
-        ax.set_xlabel(x_axis)
-        ax.set_ylabel(f"Perf [F/C]", rotation=0)
-        ax.yaxis.set_label_coords(-0.05, 1.0)
-        ax.set_xticks(extracted_data[x_axis])
-        ax.plot(extracted_data[x_axis], extracted_data[y_axis], '-o', label=section)
-    ax.grid(axis='x')
-    ax.legend(loc='lower right')
-
-
-def plot_multiple(ax, xs, ys, labels):
-    return
-
-def plot(ax, x, y, label):
-    ax.plot(x, y, '-o', label=label)
-
-
-# def compare_data(csv_files):
-#     ax_N = plt.subplot(1, 2, 1)
-#     ax_M = plt.subplot(1, 2, 2)
-
-#     for csv_file in csv_files:
-#         data = pd.read_csv(csv_file)
-#         plot_N_P(ax_N, data, )
 
 
 def generate_dummie_values(binary, flags, N_range, M_range, T_range, iterations, sections):
