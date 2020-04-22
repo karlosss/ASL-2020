@@ -28,6 +28,15 @@ The `run.sh` has multiple modes:
 - `run.sh BIN` - execute binary BIN in run mode and log measurements(specify input on stdin)
 - Input is 4 integers - N, M, T, num_iters - separated by a space
 
+## Running experiments
+Run 'experiments.py' specifying the binary to run on, the flags you want to use and the ranges to run over.
+
+An example would be:
+- 'experiments.py -b no-opt -f 'O3 fno-tree-vectorize' -n_min 20 -n_max 30 -n_step 1' (runs no-opt with -O3 -fno-tree-vectorize for n=20,...,30)
+Optional Arguments are:
+- '-b' : the binary to run on (default no-opt)
+- '-f' : a string of whitespace separated flags (default O0)
+- '-n_min, -n_max, -n_step, -m_min, -m_max, -m_step, -t_min, -t_max, -t_step, -i': the range parameters for the experiment (default n=20, m=20, t=multiple of max(m,n), i=50)
 
 ## Plotting
 A performance plot is generated automatically after a run of `experiments.py`.

@@ -110,7 +110,7 @@ def get_data(json_path, binary, flags, n, m, t, iters):
                     cycles = reg['cycles']  
                     scalar = reg['FP_ARITH:SCALAR_DOUBLE']
                     vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
-                    performance = str(int(scalar + 4*vectorized)/int(cycles))
+                    performance = str((int(scalar) + 4*int(vectorized))/int(cycles))
                     out.append('{0},{1},{2}'.format(name,cycles,performance))
 
                     i=i+1

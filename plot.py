@@ -11,15 +11,6 @@ import random
 import argparse
 
 
-SECTIONS = [
-    'baum_welch',
-    'forward_vars',
-    'backward_vars',
-    'update_initial',
-    'update_transition',
-    'update_emission'
-] 
-
 plt.rcParams.update(plt.rcParamsDefault)
 plt.style.use('ggplot')
 
@@ -76,7 +67,7 @@ def format_plot(ax, xlabel, ylabel, title):
     ax.legend(loc='lower right')
 
 
-def plot_NP_sections(ax, data, M, T, sections=SECTIONS):
+def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
         ax.set_xticks(x)
@@ -89,7 +80,7 @@ def plot_NP_sections(ax, data, M, T, sections=SECTIONS):
     )
 
 
-def plot_MP_sections(ax, data, N, T, sections=SECTIONS):
+def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
         ax.set_xticks(x)
@@ -176,6 +167,7 @@ def plot_regions_pie(ax, data, title):
           (data[csv_cols.PARAM_N] == N_max)
         & (data[csv_cols.PARAM_M] == M_max)
         & (data[csv_cols.PARAM_T] == T_max)
+        & (data[csv_cols.SECTION] != 'baum_welch')
     ]
     
     ax.set_title(title)
@@ -189,7 +181,6 @@ def plot_regions_pie(ax, data, title):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='Compare the performance of the specified experiments')
 
     parser.add_argument('--csv_files', '-f', nargs='+', help='A list of csv files with data to compare.')
