@@ -25,6 +25,7 @@ CSV_HEADER=(
     f"{csv_cols.PERFORMANCE}\n"
 )
 T_FACTOR=100
+COMPILER='g++'
 
 #########################
 
@@ -84,9 +85,9 @@ def get_flops_from_binary(binary, flags, n, m, t, iters):
     #derive path for binary
     flags_arr = flags.split(' ')
     flags_arr = ['-{0}'.format(f) for f in flags_arr]
-    flag_string = 'g++_{0}'.format('_'.join(flags_arr))
+    flag_string = '{1}_{0}'.format('_'.join(flags_arr),COMPILER)
     exec_path = './bin/{0}/{1} flops <<< \"{2} {3} {4} {5}\"'.format(flag_string,binary, n, m, t, iters)
-    print(exec_path)
+
     stream = os.popen(exec_path)
     exp_out = stream.read()
 
@@ -139,9 +140,8 @@ def compile_all(flags):
     flags = ['-{0}'.format(f) for f in flags.split(' ')]
 
     args = flags
-    args.insert(0,'g++')
+    args.insert(0,COMPILER)
     args.insert(0,'./compile.sh')
-    print(args)
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     comp.communicate()
@@ -151,11 +151,15 @@ def compile_all(flags):
 def run_experiment(binary, flags, n, m, iters, t, csv_path):
 
         #derive path for binary 
-        flag_string = 'g++_{0}'.format(flags.replace(' ','_'))
-        exec_path = './bin/{0}/{1}'.format(flag_string,binary)
+        flag_arr = flags.split(' ')
+        flag_arr = ['-{0}'.format(f) for f in flag_arr]
+        args = flag_arr
+        args.insert(0,COMPILER)
+        args.insert(0,binary)
+        args.insert(0,'./run.sh')
 
         #run experiment
-        exp = subprocess.Popen(['./run.sh',binary], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+        exp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
         exp_out = exp.communicate(input=('{0} {1} {2} {3}'.format(n,m,iters,t)).encode('utf-8'))
 
         #retrieve data from PAPI json and form a comma separated value line
