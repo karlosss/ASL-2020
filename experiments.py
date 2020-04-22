@@ -130,13 +130,21 @@ def compile_all(flags):
     print("Compiling with {0}".format(flags))
     #append "-" to flags
     flags = ['-{0}'.format(f) for f in flags.split(' ')]
+
+    args = flags
+    args.insert(0,'g++')
+    args.insert(0,'./compile.sh')
     #call compile.sh
-    comp = subprocess.Popen(['./compile.sh'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+    comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
 def run_experiment(binary, flags, n, m, iters, t, csv_path):
+
+        #derive path for binary
+        flag_string = 'g++_{0}'.format(flags.replace(' ','_'))
+        exec_path = './bin/{0}/{1}'.format(flag_string,binary)
 
         #run experiment
         exp = subprocess.Popen(['./run.sh',binary], stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
