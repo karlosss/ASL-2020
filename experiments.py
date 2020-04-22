@@ -142,7 +142,7 @@ def compile_all(flags):
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
 def run_experiment(binary, flags, n, m, iters, t, csv_path):
 
-        #derive path for binary
+        #derive path for binary 
         flag_string = 'g++_{0}'.format(flags.replace(' ','_'))
         exec_path = './bin/{0}/{1}'.format(flag_string,binary)
 
