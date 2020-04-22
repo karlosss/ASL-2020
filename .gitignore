@@ -9,3 +9,7 @@ bin/*
 logs/
 !bin/.gitkeep
 papi/
+output_data/
+venv/
+__pycache__/
+*.pyc
