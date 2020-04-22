@@ -78,15 +78,22 @@ def append_csv(csv_path, lines, binary, flags, n, m, t, iter):
             csv.write(line)
 
 
-def get_flops_from_binary(binary, n, m, t, iters):
+def get_flops_from_binary(binary, flags, n, m, t, iters):
     #call binary directly to get flop count
-    stream = os.popen('./bin/{0} flops <<< \"{1} {2} {3} {4}\"'.format(binary, n, m, t, iters))
+
+    #derive path for binary
+    flags_arr = flags.split(' ')
+    flags_arr = ['-{0}'.format(f) for f in flags_arr]
+    flag_string = 'g++_{0}'.format('_'.join(flags_arr))
+    exec_path = './bin/{0}/{1} flops <<< \"{1} {2} {3} {4}\"'.format(flag_string,binary, n, m, t, iters)
+
+    stream = os.popen(exec_path)
     exp_out = stream.read()
 
     return int(exp_out)
 
 #Takes the path to PAPI logs, parses jsons and return a list of csv lines; one line for every region
-def get_data(json_path, binary, n, m, t, iters):
+def get_data(json_path, binary, flags, n, m, t, iters):
     out=[]
     for file in os.scandir(json_path):
         with open(file) as f:
@@ -114,7 +121,7 @@ def get_data(json_path, binary, n, m, t, iters):
                 name = SECTIONS[0]
                 reg = regions[0][name]
                 cycles = reg['cycles']
-                flops = get_flops_from_binary(binary, n, m, t, iters)
+                flops = get_flops_from_binary(binary, flags, n, m, t, iters)
                 performance=flops/int(cycles)
                 out.append('{0},{1},{2}'.format(name,cycles,performance))
 
@@ -151,7 +158,7 @@ def run_experiment(binary, flags, n, m, iters, t, csv_path):
         exp_out = exp.communicate(input=('{0} {1} {2} {3}'.format(n,m,iters,t)).encode('utf-8'))
 
         #retrieve data from PAPI json and form a comma separated value line
-        data = get_data('logs/papi_hl_output', binary, n, m, t, iters)
+        data = get_data('logs/papi_hl_output', binary, flags, n, m, t, iters)
 
         #append the line to csv
         append_csv(csv_path, data, binary, flags, n, m, t, iters)
