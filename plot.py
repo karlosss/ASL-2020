@@ -167,6 +167,7 @@ def plot_regions_pie(ax, data, title):
           (data[csv_cols.PARAM_N] == N_max)
         & (data[csv_cols.PARAM_M] == M_max)
         & (data[csv_cols.PARAM_T] == T_max)
+        & (data[csv_cols.SECTION] != 'baum_welch')
     ]
     
     ax.set_title(title)
@@ -180,7 +181,6 @@ def plot_regions_pie(ax, data, title):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='Compare the performance of the specified experiments')
 
     parser.add_argument('--csv_files', '-f', nargs='+', help='A list of csv files with data to compare.')
