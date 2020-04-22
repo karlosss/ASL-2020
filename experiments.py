@@ -85,8 +85,8 @@ def get_flops_from_binary(binary, flags, n, m, t, iters):
     flags_arr = flags.split(' ')
     flags_arr = ['-{0}'.format(f) for f in flags_arr]
     flag_string = 'g++_{0}'.format('_'.join(flags_arr))
-    exec_path = './bin/{0}/{1} flops <<< \"{1} {2} {3} {4}\"'.format(flag_string,binary, n, m, t, iters)
-
+    exec_path = './bin/{0}/{1} flops <<< \"{2} {3} {4} {5}\"'.format(flag_string,binary, n, m, t, iters)
+    print(exec_path)
     stream = os.popen(exec_path)
     exp_out = stream.read()
 
@@ -141,9 +141,10 @@ def compile_all(flags):
     args = flags
     args.insert(0,'g++')
     args.insert(0,'./compile.sh')
+    print(args)
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-
+    comp.communicate()
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
