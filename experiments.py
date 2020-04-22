@@ -59,7 +59,9 @@ def create_csv(binary, flags, csv_header):
 
     #get absolute path for csv
     path = os.path.dirname(__file__)
+
     path = os.path.join(path, OUTPUT_DIR)
+
     if not os.path.exists(path):
         os.makedirs(path)
     csv_path = os.path.join(path,csv_name)
