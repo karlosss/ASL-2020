@@ -11,6 +11,17 @@ function set_perf_paranoid() {
     fi
 }
 
+if [[ -z "$1" ]]
+then
+  echo "Usage: $0 COMPILER [FLAGS...]" >&2
+  exit 2
+else
+  compiler="$1"
+  shift
+  flags="$*"
+  underscored_flags=${flags// /_}
+fi
+
 # install PAPI
 if ! [[ -d "papi" ]]
 then
@@ -31,7 +42,8 @@ fi
 
 # compile
 set_perf_paranoid
-cmake .
+
+cmake -DCOMPILER="$compiler" -DFLAGS="$flags" -DUNDERSCORED_FLAGS="$underscored_flags" .
 make
 
 echo "======================================================================"
@@ -48,26 +60,6 @@ fi
 
 cd bin || exit 3
 
-# delete old binaries which are no longer mentioned in CMakeLists.txt
-for i in *
-do
-    if ! [[ "$i" = ".gitkeep" ]]
-    then
-        found=0
-        for j in $executables
-        do
-            if [[ "$i" = "$j" ]]
-            then
-                found=1
-            fi
-        done
-        if [[ "$found" -eq 0 ]]
-        then
-            rm "$i"
-        fi
-    fi
-done
-
 # test binaries
 wrong=0
 correct=0
@@ -79,7 +71,7 @@ num_iter=50
 
 for i in $executables
 do
-    if ! ./"$i" test <<<"$N $M $T $num_iter"
+    if ! ./"${compiler}_$underscored_flags/$i" test <<<"$N $M $T $num_iter"
     then
         echo "!!! WARNING: binary \`$i\` produces wrong output !!!" >&2
         ((wrong++))
