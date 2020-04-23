@@ -309,9 +309,6 @@ if __name__=='__main__':
     M_tuple = parse_tuple("-M", args.M, args.e)    
     T_tuple = parse_tuple("-T", args.T, args.e)
 
-    print(N_tuple)
-    print(M_tuple)
-    print(T_tuple)
     if None in [N_tuple, M_tuple, T_tuple]:
         print(f"Abort")
         exit(1)   
@@ -321,7 +318,7 @@ if __name__=='__main__':
     t_min, t_max, *t_step = T_tuple
 
     t_min = T_FACTOR * (max(m_max, n_max) - 1)
-    t_max = max(t_min   , t_max)
+    t_max = max(t_min+1, t_max)
     
     # Update T_tuple with adusted parameters.
     T_tuple = tuple([t_min, t_max, *t_step])
@@ -329,12 +326,11 @@ if __name__=='__main__':
     def create_iterator(t, exp):
         if not exp: return list(range(*t))
         else: return [2**i for i in range(*t)]
-        # else: return map(lambda x: 2**x, range(*t))
     
     N_iter = create_iterator(N_tuple, args.e)    
     M_iter = create_iterator(M_tuple, args.e)    
     T_iter = create_iterator(T_tuple, args.e)
-
+    
     main(
         args.bin, 
         N_iter, M_iter, T_iter,
