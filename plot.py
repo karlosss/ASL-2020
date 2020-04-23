@@ -7,6 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import python_lib.csv_cols as csv_cols
 import python_lib.constants as constants
+import python_lib.cpu_info as cpu_info
 import random
 import argparse
 
@@ -186,11 +187,13 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     ax_MP = plt.subplot(2, 3, 2)
     ax_TP = plt.subplot(2, 3, 3)
     ax_S  = plt.subplot(2, 3, 5)
+    ax_table = plt.subplot(2, 3, 4)
     
     sections = get_sections(data)
     plot_NP_sections(ax_NP, data, M, T, sections)
     plot_MP_sections(ax_MP, data, N, T, sections)
     plot_TP_sections(ax_TP, data, N, M, sections)
+    plot_cpu_info_table(ax_table, "CPU Info")
 
     plot_regions_pie(ax_S, data, "Sections")
 
@@ -225,6 +228,20 @@ def plot_regions_pie(ax, data, title):
     )
     for autotext in autotexts:
         autotext.set_color('white')
+
+
+def plot_cpu_info_table(ax, title):
+    row_labels = [
+        "Name:",
+        "Number:",
+        "Base Freq:",
+        "Max Freq:",
+        "Turbo Boost:",
+        "L1 cache:",
+        "L2 cache:",
+        "L3 cache:"
+    ]
+    ax.table(cellText=cpu_info.info_list,rowLabels=row_labels)
 
 
 if __name__ == "__main__":
