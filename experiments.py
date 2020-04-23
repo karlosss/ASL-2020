@@ -310,7 +310,7 @@ if __name__=='__main__':
     if args.e:
         lower_bound = (2 ** (max(m_max, n_max) - 1)) * T_FACTOR
         t_min = max(t_min, math.ceil(math.log2(lower_bound)))
-        t_max = max(t_min, t_max)
+        t_max = max(t_min+1, t_max)
     else:
         t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
         t_max = max(t_min+1, t_max)
