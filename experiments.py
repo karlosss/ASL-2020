@@ -4,6 +4,7 @@
 import argparse
 import datetime
 import os
+import math
 import glob
 import subprocess
 import json
@@ -25,7 +26,7 @@ CSV_HEADER=(
     f"{csv_cols.NUM_CYCLES},"
     f"{csv_cols.PERFORMANCE}\n"
 )
-T_FACTOR=1
+T_FACTOR=10
 COMPILER='g++'
 
 #########################
@@ -222,6 +223,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, flags):
     #compilation
     compile_all(flags)
     print("Files compiled")
+    print(T_iter)
                 
     #run all experiments
     for n in N_iter:
@@ -306,8 +308,13 @@ if __name__=='__main__':
     t_min, t_max, *t_step = T_tuple
 
     # t_min = T_FACTOR * (max(m_max, n_max))
-    t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
-    t_max = max(t_min, t_max) + 1
+    if args.e:
+        lower_bound = 2 ** (max(m_max, n_max) - 1)
+        t_min = max(t_min, math.ceil(math.log2(lower_bound)))
+        t_max = max(t_min, t_max)+1
+    else:
+        t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
+        t_max = max(t_min, t_max)+1
     
     # Update T_tuple with adusted parameters.
     T_tuple = tuple([t_min, t_max, *t_step])
