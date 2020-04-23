@@ -203,7 +203,7 @@ if __name__=='__main__':
 
     args = read_input()
     t_min = T_FACTOR * max(int(args.m_max),int(args.n_max))
-    t_max = max(t_min, t_max)
+    t_max = max(t_min+1, int(args.t_max))
 
     main(
         args.bin, 
