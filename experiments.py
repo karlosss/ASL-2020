@@ -52,18 +52,18 @@ def read_input():
     )
     parser.add_argument(
         "-N", "--hidden-states",
-        help="-N=(min, max, step) for range or simply '-N=10' for fixed N.",
+        help="-N='min, max, step' for range or simply '-N=10' for fixed N.",
         dest="N", default="1, 11, 1"
     )
     parser.add_argument(
         "-M", "--observation-alphabet-size", 
-        help="-M=(min, max, step) for range or simply '-M=10' for fixed M.",
-        dest="M", default='1, 11, 1'
+        help="-M='min, max, step' for range or simply '-M=10' for fixed M.",
+        dest="M", default="1, 11, 1"
     )
     parser.add_argument(
         "-T", "--sequence-length", 
-        help="-T=(min, max, step) for range or simply '-T=10' for fixed T.",
-        dest="T", default='10, 20, 1'
+        help="-T='min, max, step' for range or simply '-T=10' for fixed T.",
+        dest="T", default="10, 20, 1"
     )
     parser.add_argument(
         '-e', "--exponential", 
