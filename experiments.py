@@ -267,7 +267,7 @@ def parse_tuple(arg_name, arg_string, exp):
             if _step < 0:
                 print(f"Error in argument '{arg_name}': Negative stepsize.")
                 return None
-            return (_min, _max, _step)
+            return (_min, _max+1, _step)
         else:
             if len(t) == 3:
                 _min, _max, _ = t
@@ -285,7 +285,7 @@ def parse_tuple(arg_name, arg_string, exp):
             if _min > _max:
                 print(f"Error in argument '{arg_name}': Min={_min} is larger than max={_max}.")
                 return None
-            return (_min, _max)
+            return (_min, _max+1)
 
 
 
