@@ -155,7 +155,14 @@ def multiplot_NP_MP_S(csv_file, N=None, M=None, T=None):
     plot_regions_pie(ax_S, data, "Sections")
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    plt.show()
+    # plt.savefig("testfig.png")
+    fig_dir = "figures"
+    if not os.path.exists(fig_dir):
+        os.makedirs(fig_dir)
+    fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
+    fig_save_path = os.path.join(fig_dir, fig_name)
+    plt.savefig(fig_save_path)
+    print(f"Figure saved to: {fig_save_path}{suffix}")
 
 
 def plot_regions_pie(ax, data, title):
