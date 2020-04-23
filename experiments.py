@@ -8,6 +8,7 @@ import glob
 import subprocess
 import json
 import plot
+from ast import literal_eval as make_tuple
 import python_lib.csv_cols as csv_cols
 from python_lib.constants import OUTPUT_DIR, SECTIONS 
 #########################
@@ -59,16 +60,19 @@ def read_input():
     parser.add_argument(
         "-N", "--hidden-states", 
         help="-N=(min, max, step) for range or simply '-N=10' for fixed N.",
+        dest="N",
         default=20
     )
     parser.add_argument(
         "-M", "--observation-alphabet-size", 
         help="-M=(min, max, step) for range or simply '-M=10' for fixed M.",
+        dest="M",
         default=20
     )
     parser.add_argument(
         "-T", "--sequence-length", 
         help="-T=(min, max, step) for range or simply '-T=10' for fixed T.",
+        dest="T",
         default=20
     )
     parser.add_argument(
@@ -77,8 +81,9 @@ def read_input():
             "If set, the 'min' and 'max' of the N, M and T ranges are interpreted\n"
             "as base 2 exponents and 'step' can be omitted.\n"
             "\n"
-            "Example: -e -N=(2,10) --> N ranges over [2^2, 2^3, ..., 2^10]"
+            "Example: -e -N=(2,11) --> N ranges over [2^2, 2^3, ..., 2^10]"
         ),
+        dest="e",
         action='store_true'
     )
     parser.add_argument(
@@ -221,9 +226,7 @@ def run_experiment(binary, flags, n, m, iters, t, csv_path):
         append_csv(csv_path, data, binary, flags, n, m, t, iters)
 
 
-
-def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max, t_step, flags):
-
+def main(binary, N_iter, M_iter, T_iter, iters, flags):
     #create a csv
     csv_path = create_csv(binary, flags, CSV_HEADER)
     print("CSV Created")
@@ -231,11 +234,11 @@ def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max
     #compilation
     compile_all(flags)
     print("Files compiled")
-
+                
     #run all experiments
-    for n in range(n_min, n_max, n_step):
-        for m in range(m_min, m_max, m_step):
-            for t in range(t_min, t_max, t_step):
+    for n in N_iter:
+        for m in M_iter:
+            for t in T_iter:
 
                 print("running for N: {0}, M: {1}, T: {2}".format(n,m,t))
 
@@ -248,23 +251,93 @@ def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max
     plot.multiplot_NP_MP_TP_S(csv_path)
     
 
+def parse_tuple(arg_name, arg_string, exp):
+    t = make_tuple(arg_string)
+    # In case of scalar argument return a tuple representing a 1-number range
+    if type(t) == int:
+        if not exp: return (t, t+1, 1)
+        else: return (t, t+1)
+
+    elif type(t) == tuple:
+        if not exp:
+            if len(t) == 3:
+                    _min, _max, _step = t
+            elif len(t) == 2: 
+                (_min, _max), _step = t, 1
+                print(
+                    f"Warning for argument '{arg_name}': No step size p provided."
+                    f"Using stepsize 1."
+                )
+            else: 
+                print(f"Error in argument '{arg_name}': Tuple {t} too long.")
+                return None
+
+            if _min > _max:
+                print(f"Error in argument '{arg_name}': Min={_min} is larger than max={_max}.")
+                return None
+
+            if _step < 0:
+                print(f"Error in argument '{arg_name}': Negative stepsize.")
+                return None
+            return (_min, _max, _step)
+        else:
+            if len(t) == 3:
+                _min, _max, _ = t
+                print(
+                    f"Warning for argument '{arg_name}': Stepsize will be ignored because"
+                    f"'-e' flag is set."
+                )
+            elif len(t) == 2:
+                _min, _max = t
+            else: 
+                print(f"Error in argument '{arg_name}': Tuple {t} too long.")
+                return None
+
+
+            if _min > _max:
+                print(f"Error in argument '{arg_name}': Min={_min} is larger than max={_max}.")
+                return None
+            return (_min, _max)
+
+
 
 if __name__=='__main__':
 
     args = read_input()
-    t_min = T_FACTOR * max(int(args.m_max),int(args.n_max))
-    t_max = max(t_min+1, int(args.t_max))
+
+    N_tuple = parse_tuple("-N", args.N, args.e)    
+    M_tuple = parse_tuple("-M", args.M, args.e)    
+    T_tuple = parse_tuple("-T", args.T, args.e)
+
+    print(N_tuple)
+    print(M_tuple)
+    print(T_tuple)
+    if None in [N_tuple, M_tuple, T_tuple]:
+        print(f"Abort")
+        exit(1)   
+
+    n_min, n_max, *_ = N_tuple
+    m_min, m_max, *_ = M_tuple
+    t_min, t_max, *t_step = T_tuple
+
+    t_min = T_FACTOR * (max(m_max, n_max) - 1)
+    t_max = max(t_min   , t_max)
+    
+    # Update T_tuple with adusted parameters.
+    T_tuple = tuple([t_min, t_max, *t_step])
+
+    def create_iterator(t, exp):
+        if not exp: return list(range(*t))
+        else: return [2**i for i in range(*t)]
+        # else: return map(lambda x: 2**x, range(*t))
+    
+    N_iter = create_iterator(N_tuple, args.e)    
+    M_iter = create_iterator(M_tuple, args.e)    
+    T_iter = create_iterator(T_tuple, args.e)
 
     main(
         args.bin, 
-        int(args.n_min), 
-        int(args.n_max), 
-        int(args.n_step), 
-        int(args.m_min), 
-        int(args.m_max), 
-        int(args.m_step), 
-        int(args.iters),
-        int(t_min), 
-        int(t_max), 
-        int(args.t_step), 
-        args.flags)
+        N_iter, M_iter, T_iter,
+        int(args.iters), 
+        args.flags
+    )
