@@ -24,7 +24,7 @@ CSV_HEADER=(
     f"{csv_cols.NUM_CYCLES},"
     f"{csv_cols.PERFORMANCE}\n"
 )
-T_FACTOR=100
+T_FACTOR=10
 COMPILER='g++'
 
 #########################
