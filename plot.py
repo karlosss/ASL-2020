@@ -104,6 +104,19 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     )
 
 
+def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
+    for section in sections:
+        x, y = extract_TP_data(data, N, M, section)
+        ax.set_xticks(x)
+        ax.plot(x, y, label=section)
+
+    format_plot(ax, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Perf [F/C]",
+        title=f"N = {N}, M = {M}"
+    )
+
+
 def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.figure(figsize=(15, 6), facecolor='w')
 
