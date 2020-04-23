@@ -18,6 +18,6 @@ info_list = [
     L1_CACHE,
     L2_CACHE,
     L3_CACHE,
-    WRITE_BANDWIDTH,
-    READ_BANDWIDTH
+    # WRITE_BANDWIDTH,
+    # READ_BANDWIDTH
 ]
