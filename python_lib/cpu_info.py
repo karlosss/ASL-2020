@@ -8,3 +8,16 @@ L2_CACHE = "256 KiB / 4-way"
 L3_CACHE = "2 MiB / 16-way"
 WRITE_BANDWIDTH = "TODO"
 READ_BANDWIDTH = "TODO"
+
+info_list = [
+    CPU_NAME,
+    CPU_NUMBER,
+    CPU_BASE_FRQ,
+    CPU_MAX_FRQ,
+    TURBO_BOOST,
+    L1_CACHE,
+    L2_CACHE,
+    L3_CACHE,
+    WRITE_BANDWIDTH,
+    READ_BANDWIDTH
+]
