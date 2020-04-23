@@ -1,0 +1,49 @@
+N: Number of (hidden) states.
+M: Size of observation alphabet.
+T: Length of observation sequence.
+NUM_ITERATIONS (it)
+
+# Performance plots (size [int]--> perf [F/C])
+
+## 1D  variants:
+- f(N)  = perf(N, M, T(N), it)
+- f(M)  = perf(N, M, T(M), it)
+- f(T)  = perf(N, M, T, it) 
+- f(it) = perf(N, M, T, it)  <-- unnecessary ?
+
+
+- f(N, M) and T depends on N and M
+- f(t) = perf(
+  N*scale_N*t,
+  M*scale_M*t,
+  T*scale_T*t
+)
+
+## 2D variants
+- f(N, M) = perf(N, M, T, it)
+
+# Roofline plots
+- Annotate 4-tuple (N, M, T, it) directly on the plotted point.
+- For a sequence of measurements with a 1D variation (as above) connect the points on the roofline plot.
+
+
+# Plot command examples:
+
+## Performance plot for variable N:
+
+plot BIN FLAGS [--name=NAME] [PERF | ROOFLINE] INPUT_STRING
+
+where INPUT_STRING specifies the inputs.
+For example, when plotting variable N (leaving the other parameters fixed), specify:
+
+INPUT_STRING = N=(10,100,10), M=50, T=10, it=100
+
+Effect:
+runs binary BIN with flags FLAGS and for all input combinations of INPUT_STRING. Generates a .csv file with name "BIN_FLAGS_timestamp.csv" and store it in plots/data.
+It then displays a plot of the data of the just stored csv file.
+
+
+
+
+plot perf baum_welch_unroll4 N=(10,100,10) M=50, T=20, it=100
+
