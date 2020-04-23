@@ -19,6 +19,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
+
 def extract_NP_data(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
@@ -27,6 +28,7 @@ def extract_NP_data(data, M, T, section):
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
 
+
 def extract_MP_data(data, N, T, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
@@ -34,6 +36,15 @@ def extract_MP_data(data, N, T, section):
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
+
+
+def extract_TP_data(data, N, M, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_T], f[csv_cols.PERFORMANCE]
 
 
 def adjust_param(data, param, value):
