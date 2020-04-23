@@ -254,7 +254,7 @@ def parse_tuple(arg_name, arg_string, exp):
             elif len(t) == 2: 
                 (_min, _max), _step = t, 1
                 print(
-                    f"Warning for argument '{arg_name}': No step size p provided."
+                    f"Warning for argument '{arg_name}': No step size p provided. "
                     f"Using stepsize 1."
                 )
             else: 
