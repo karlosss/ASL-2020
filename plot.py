@@ -159,33 +159,36 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.show()
 
 
-def multiplot_NP_MP_S(csv_file, N=None, M=None, T=None):
+def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
     T = adjust_param(data, csv_cols.PARAM_T, T)
-    plt.figure(figsize=(15, 6), facecolor='w')
+    plt.figure(figsize=(15, 12), facecolor='w')
     binary_name, flags = get_experiment_info(data)
 
     fig = plt.gcf()
     fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
 
-    ax_NP = plt.subplot(1, 3, 1)
-    ax_MP = plt.subplot(1, 3, 2)
-    ax_S  = plt.subplot(1, 3, 3)
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+    ax_S  = plt.subplot(2, 3, 5)
  
     plot_NP_sections(ax_NP, data, M, T)
     plot_MP_sections(ax_MP, data, N, T)
+    plot_TP_sections(ax_TP, data, N, M)
+
     plot_regions_pie(ax_S, data, "Sections")
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    # plt.savefig("testfig.png")
     fig_dir = "figures"
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
     fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
     fig_save_path = os.path.join(fig_dir, fig_name)
     plt.savefig(fig_save_path)
+    plt.show()
     print(f"Figure saved to: {fig_save_path}{suffix}")
 
 
