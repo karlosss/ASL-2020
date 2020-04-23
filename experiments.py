@@ -30,20 +30,70 @@ COMPILER='g++'
 #########################
 
 def read_input():
-    parser = argparse.ArgumentParser(description='Run experiment on a specified binary and write to a csv, returns the absolute path to the csv')
-
-    parser.add_argument('-b','-binary',help='The binary you want the experiments to be run on',dest='bin',default='no_opt')
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run experiment on a specified binary and write to a csv, "
+            "returns the absolute path to the csv"
+        ),
+        formatter_class=argparse.RawTextHelpFormatter   
+    )
     parser.add_argument('-n_min',help='The minimal value for N, 20 if none specified',dest='n_min',default=20)
     parser.add_argument('-n_max',help='The maximum value for N, 21 if none specified',dest='n_max',default=21)
     parser.add_argument('-n_step',help='The stepping value for N, 10 if none specified',dest='n_step',default=10)
     parser.add_argument('-m_min',help='The minimum value for M, 20 if none specified',dest='m_min',default=20)
     parser.add_argument('-m_max',help='The maximum value for M, 21 if none specified',dest='m_max',default=21)
     parser.add_argument('-m_step',help='The stepping value for M, 10 if none specified',dest='m_step',default=10)
-    parser.add_argument('-i',help='The number of iterations, 50 if none specified',dest= 'iters', default=50)
     parser.add_argument('-t_min',help='The minimum value of T (min is 10000*min(N_max,M_max))',dest='t_max',default=0)
     parser.add_argument('-t_max',help='The maximal value of T (min is 10000*min(N_max,M_max))',dest='t_max',default=0)
     parser.add_argument('-t_step',help='The stepping value of T, default is 10',default=10)
-    parser.add_argument('-f',help='The flags to use for compilation (as a single string, and without leading "-", i.e. O0 fno-tree-vectorize), default is -O0',dest='flags',default='O0')
+    parser.add_argument('-b','-binary',help='The binary you want the experiments to be run on',dest='bin',default='no_opt')
+    parser.add_argument(
+        "-f", "--flags",
+        help=(
+            "The flags to use for compilation (as a single string, and without\n"
+            "leading '-', i.e. O0 fno-tree-vectorize), default is -O0."
+        ),
+        dest="flags",
+        default="O0"
+    )
+    parser.add_argument(
+        "-N", "--hidden-states", 
+        help="-N=(min, max, step) for range or simply '-N=10' for fixed N.",
+        default=20
+    )
+    parser.add_argument(
+        "-M", "--observation-alphabet-size", 
+        help="-M=(min, max, step) for range or simply '-M=10' for fixed M.",
+        default=20
+    )
+    parser.add_argument(
+        "-T", "--sequence-length", 
+        help="-T=(min, max, step) for range or simply '-T=10' for fixed T.",
+        default=20
+    )
+    parser.add_argument(
+        '-e', "--exponential", 
+        help=(
+            "If set, the 'min' and 'max' of the N, M and T ranges are interpreted\n"
+            "as base 2 exponents and 'step' can be omitted.\n"
+            "\n"
+            "Example: -e -N=(2,10) --> N ranges over [2^2, 2^3, ..., 2^10]"
+        ),
+        action='store_true'
+    )
+    parser.add_argument(
+        "-i", "--iterations",
+        help='The number of iterations, 50 if none specified',
+        dest= "iters", 
+        default=50)
+    parser.add_argument(
+        '-p', "--show-plot", 
+        help=(
+            "If set, the plot will pop up at the end (the .png file will be created \n"
+            "either way)."
+        ),
+        action='store_true'
+    )
     return parser.parse_args()
 
 
