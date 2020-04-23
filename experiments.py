@@ -202,8 +202,8 @@ def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max
 if __name__=='__main__':
 
     args = read_input()
-    t_min = T_FACTOR*int(args.m_max) if int(args.m_max)<int(args.n_max) else T_FACTOR*int(args.n_max)
-    t_max = int(args.t_max) if int(args.t_max) > int(t_min) else int(t_min)+1
+    t_min = T_FACTOR * max(int(args.m_max),int(args.n_max))
+    t_max = max(t_min, t_max)
 
     main(
         args.bin, 
