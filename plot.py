@@ -123,8 +123,9 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     fig = plt.gcf()
     fig.suptitle(f"Comparison", fontsize=16)
 
-    ax_NP = plt.subplot(1, 2, 1)
-    ax_MP = plt.subplot(1, 2, 2)
+    ax_NP = plt.subplot(1, 3, 1)
+    ax_MP = plt.subplot(1, 3, 2)
+    ax_TP = plt.subplot(1, 3, 3)
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
@@ -138,12 +139,15 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
 
         x_NP, y_NP = extract_NP_data(data, M, T, section="baum_welch")
         x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
+        x_TP, y_TP = extract_TP_data(data, N, M, section="baum_welch")
 
         ax_NP.plot(x_NP, y_NP, label=label)
         ax_MP.plot(x_MP, y_MP, label=label)
+        ax_TP.plot(x_TP, y_TP, label=label)
 
         ax_NP.set_xticks(x_NP)
         ax_MP.set_xticks(x_MP)
+        ax_TP.set_xticks(x_TP)
 
     format_plot(ax_NP, 
         xlabel=csv_cols.PARAM_N,
@@ -154,6 +158,11 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         xlabel=csv_cols.PARAM_M,
         ylabel=f"Perf [F/C]",
         title=f"N = {N}, T = {T}"
+    )
+    format_plot(ax_TP, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Perf [F/C]",
+        title=f"N = {N}, M = {M}"
     )
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     plt.show()
