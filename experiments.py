@@ -24,7 +24,7 @@ CSV_HEADER=(
     f"{csv_cols.NUM_CYCLES},"
     f"{csv_cols.PERFORMANCE}\n"
 )
-T_FACTOR=100
+T_FACTOR=1
 COMPILER='g++'
 
 #########################
@@ -195,15 +195,15 @@ def main(binary, n_min, n_max, n_step, m_min, m_max, m_step, iters, t_min, t_max
     print("Find your output in: {0}".format(csv_path))
 
     print(f"Plotting summary...")
-    plot.multiplot_NP_MP_S(csv_path)
+    plot.multiplot_NP_MP_TP_S(csv_path)
     
 
 
 if __name__=='__main__':
 
     args = read_input()
-    t_min = T_FACTOR*int(args.m_max) if int(args.m_max)<int(args.n_max) else T_FACTOR*int(args.n_max)
-    t_max = int(args.t_max) if int(args.t_max) > int(t_min) else int(t_min)+1
+    t_min = T_FACTOR * max(int(args.m_max),int(args.n_max))
+    t_max = max(t_min+1, int(args.t_max))
 
     main(
         args.bin, 

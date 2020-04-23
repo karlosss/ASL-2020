@@ -19,6 +19,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
+
 def extract_NP_data(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
@@ -27,6 +28,7 @@ def extract_NP_data(data, M, T, section):
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
 
+
 def extract_MP_data(data, N, T, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
@@ -34,6 +36,15 @@ def extract_MP_data(data, N, T, section):
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
+
+
+def extract_TP_data(data, N, M, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_T], f[csv_cols.PERFORMANCE]
 
 
 def adjust_param(data, param, value):
@@ -93,14 +104,28 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     )
 
 
+def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
+    for section in sections:
+        x, y = extract_TP_data(data, N, M, section)
+        ax.set_xticks(x)
+        ax.plot(x, y, label=section)
+
+    format_plot(ax, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Perf [F/C]",
+        title=f"N = {N}, M = {M}"
+    )
+
+
 def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.figure(figsize=(15, 6), facecolor='w')
 
     fig = plt.gcf()
     fig.suptitle(f"Comparison", fontsize=16)
 
-    ax_NP = plt.subplot(1, 2, 1)
-    ax_MP = plt.subplot(1, 2, 2)
+    ax_NP = plt.subplot(1, 3, 1)
+    ax_MP = plt.subplot(1, 3, 2)
+    ax_TP = plt.subplot(1, 3, 3)
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
@@ -114,12 +139,15 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
 
         x_NP, y_NP = extract_NP_data(data, M, T, section="baum_welch")
         x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
+        x_TP, y_TP = extract_TP_data(data, N, M, section="baum_welch")
 
         ax_NP.plot(x_NP, y_NP, label=label)
         ax_MP.plot(x_MP, y_MP, label=label)
+        ax_TP.plot(x_TP, y_TP, label=label)
 
         ax_NP.set_xticks(x_NP)
         ax_MP.set_xticks(x_MP)
+        ax_TP.set_xticks(x_TP)
 
     format_plot(ax_NP, 
         xlabel=csv_cols.PARAM_N,
@@ -131,37 +159,45 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         ylabel=f"Perf [F/C]",
         title=f"N = {N}, T = {T}"
     )
+    format_plot(ax_TP, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Perf [F/C]",
+        title=f"N = {N}, M = {M}"
+    )
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     plt.show()
 
 
-def multiplot_NP_MP_S(csv_file, N=None, M=None, T=None):
+def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
     T = adjust_param(data, csv_cols.PARAM_T, T)
-    plt.figure(figsize=(15, 6), facecolor='w')
+    plt.figure(figsize=(15, 12), facecolor='w')
     binary_name, flags = get_experiment_info(data)
 
     fig = plt.gcf()
     fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
 
-    ax_NP = plt.subplot(1, 3, 1)
-    ax_MP = plt.subplot(1, 3, 2)
-    ax_S  = plt.subplot(1, 3, 3)
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+    ax_S  = plt.subplot(2, 3, 5)
  
     plot_NP_sections(ax_NP, data, M, T)
     plot_MP_sections(ax_MP, data, N, T)
+    plot_TP_sections(ax_TP, data, N, M)
+
     plot_regions_pie(ax_S, data, "Sections")
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    # plt.savefig("testfig.png")
     fig_dir = "figures"
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
     fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
     fig_save_path = os.path.join(fig_dir, fig_name)
     plt.savefig(fig_save_path)
+    plt.show()
     print(f"Figure saved to: {fig_save_path}{suffix}")
 
 

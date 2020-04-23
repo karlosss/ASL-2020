@@ -10,6 +10,7 @@ logs/
 !bin/.gitkeep
 papi/
 output_data/
+figures/
 venv/
 __pycache__/
 *.pyc
