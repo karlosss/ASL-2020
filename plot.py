@@ -80,12 +80,12 @@ def format_plot(ax, xlabel, ylabel, title):
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
     ax.legend(loc='lower right')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
 
 
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
@@ -98,7 +98,6 @@ def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
 def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
@@ -111,7 +110,6 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
 def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_TP_data(data, N, M, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
