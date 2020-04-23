@@ -9,3 +9,4 @@ bin/*
 logs/
 !bin/.gitkeep
 papi/
+figures/
