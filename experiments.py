@@ -162,7 +162,7 @@ def get_data(json_path, binary, flags, n, m, t, iters):
                     i=i+1
 
             except KeyError:    
-                print("Your machine does not support PAPI FLOP counters, proceeding with less acurate count")
+                print("Your machine does not support PAPI FLOP counters, proceeding with less acurate count.")
                 
                 name = SECTIONS[0]
                 reg = regions[0][name]
