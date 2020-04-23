@@ -20,6 +20,15 @@ def find_nearest(array, value):
     return array[idx]
 
 
+def is_exponential(vals):
+    return (
+        len(vals) > 3 
+        and vals[0] * 2 == vals[1]  
+        and vals[1] * 2 == vals[2]  
+        and vals[2] * 2 == vals[3]
+    )
+
+
 def extract_NP_data(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
@@ -69,13 +78,14 @@ def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
 
 
-def format_plot(ax, xlabel, ylabel, title):
+def format_plot(ax, xlabel, ylabel, title, is_exp):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel, rotation=0)
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
     ax.legend(loc='lower right')
+
 
 
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
