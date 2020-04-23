@@ -81,6 +81,7 @@ def format_plot(ax, xlabel, ylabel, title):
     ax.grid(axis='x')
     ax.legend(loc='lower right')
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.set_ylim(ymin=0)
 
 
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
