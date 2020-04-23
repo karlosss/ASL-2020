@@ -99,11 +99,14 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
     ax.set_ylim(ymin=-0.2)
 
 
+def plot_series(ax, x, y, label):
+    ax.plot(x, y, '-o', label=label)
+
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -122,7 +125,7 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -141,7 +144,7 @@ def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_TP_data(data, N, M, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -182,9 +185,9 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
         x_TP, y_TP = extract_TP_data(data, N, M, section="baum_welch")
 
-        ax_NP.plot(x_NP, y_NP, label=label)
-        ax_MP.plot(x_MP, y_MP, label=label)
-        ax_TP.plot(x_TP, y_TP, label=label)
+        plot_series(ax_NP, x_NP, y_NP, label=label)
+        plot_series(ax_MP, x_MP, y_MP, label=label)
+        plot_series(ax_TP, x_TP, y_TP, label=label)
 
         if exp_NP is None:
             exp_NP = is_exponential(x_NP.tolist())
@@ -294,7 +297,18 @@ def plot_cpu_info_table(ax, title):
         "L2 cache:",
         "L3 cache:"
     ]
-    ax.table(cellText=cpu_info.info_list,rowLabels=row_labels)
+    data = [[item] for item in cpu_info.info_list]
+    table = ax.table(
+        cellText=data ,
+        rowLabels=row_labels,
+        rowLoc='left', 
+        colLoc='left',
+        edges='horizontal',
+        loc='center',
+        bbox=[0.4, 0.0, 0.6, 1.0])
+    table.set_fontsize(16)
+    # table.scale(0.5, 3)
+    ax.axis('off')
 
 
 if __name__ == "__main__":
