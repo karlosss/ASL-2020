@@ -2,6 +2,7 @@
 
 import os
 import sys
+import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -19,6 +20,15 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]
+
+
+def is_exponential(vals):
+    return (
+        len(vals) > 3 
+        and vals[0] * 2 == vals[1]  
+        and vals[1] * 2 == vals[2]  
+        and vals[2] * 2 == vals[3]
+    )
 
 
 def extract_NP_data(data, M, T, section):
@@ -74,50 +84,75 @@ def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
 
 
-def format_plot(ax, xlabel, ylabel, title):
+def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel, rotation=0)
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
     ax.legend(loc='lower right')
-    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-    ax.set_ylim(ymin=0)
+    if is_exp:
+        ax.set_xticks([2 ** i for i in range(min_exp, max_exp)])
+        ax.set_xscale('log', basex=2)
+    else:
+        ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.set_ylim(ymin=-0.2)
 
 
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
+    exp = None
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
         ax.plot(x, y, label=section)
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
 
     format_plot(ax, 
         xlabel=csv_cols.PARAM_N,
         ylabel=f"Perf [F/C]",
-        title=f"M = {M}, T = {T}"
+        title=f"M = {M}, T = {T}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
     )
 
 
 def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
+    exp = None
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
         ax.plot(x, y, label=section)
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
 
     format_plot(ax, 
         xlabel=csv_cols.PARAM_M,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, T = {T}"
+        title=f"N = {N}, T = {T}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
     )
 
 
 def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
+    exp = None
     for section in sections:
         x, y = extract_TP_data(data, N, M, section)
         ax.plot(x, y, label=section)
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
 
     format_plot(ax, 
         xlabel=csv_cols.PARAM_T,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, M = {M}"
+        title=f"N = {N}, M = {M}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
     )
 
 
@@ -130,6 +165,8 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     ax_NP = plt.subplot(1, 3, 1)
     ax_MP = plt.subplot(1, 3, 2)
     ax_TP = plt.subplot(1, 3, 3)
+    
+    exp_NP = exp_MP = exp_TP = None
 
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
@@ -149,24 +186,40 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         ax_MP.plot(x_MP, y_MP, label=label)
         ax_TP.plot(x_TP, y_TP, label=label)
 
-        ax_NP.set_xticks(x_NP)
-        ax_MP.set_xticks(x_MP)
-        ax_TP.set_xticks(x_TP)
+        if exp_NP is None:
+            exp_NP = is_exponential(x_NP.tolist())
+            min_exp_NP, max_exp_NP = int(math.log2(x_NP.min())), int(math.log2(x_NP.max()))
+        if exp_MP is None:
+            exp_MP = is_exponential(x_MP.tolist())
+            min_exp_MP, max_exp_MP = int(math.log2(x_MP.min())), int(math.log2(x_MP.max()))
+        if exp_TP is None:
+            exp_TP = is_exponential(x_TP.tolist())
+            min_exp_TP, max_exp_TP = int(math.log2(x_TP.min())), int(math.log2(x_TP.max()))
+
 
     format_plot(ax_NP, 
         xlabel=csv_cols.PARAM_N,
         ylabel=f"Perf [F/C]",
-        title=f"M = {M}, T = {T}"
+        title=f"M = {M}, T = {T}",
+        is_exp=exp_NP, 
+        min_exp=min_exp_NP, 
+        max_exp=max_exp_NP
     )
     format_plot(ax_MP, 
         xlabel=csv_cols.PARAM_M,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, T = {T}"
+        title=f"N = {N}, T = {T}",
+        is_exp=exp_MP, 
+        min_exp=min_exp_MP, 
+        max_exp=max_exp_MP
     )
     format_plot(ax_TP, 
         xlabel=csv_cols.PARAM_T,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, M = {M}"
+        title=f"N = {N}, M = {M}",
+        is_exp=exp_TP, 
+        min_exp=min_exp_TP, 
+        max_exp=max_exp_TP
     )
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     plt.show()
