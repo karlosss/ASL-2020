@@ -65,6 +65,10 @@ def get_experiment_info(data):
     return data[csv_cols.BINARY].iloc[0], data[csv_cols.FLAGS].iloc[0]
 
 
+def get_sections(data):
+    return data[csv_cols.SECTION].unique()
+
+
 def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
 
@@ -183,10 +187,11 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     ax_MP = plt.subplot(2, 3, 2)
     ax_TP = plt.subplot(2, 3, 3)
     ax_S  = plt.subplot(2, 3, 5)
- 
-    plot_NP_sections(ax_NP, data, M, T)
-    plot_MP_sections(ax_MP, data, N, T)
-    plot_TP_sections(ax_TP, data, N, M)
+    
+    sections = get_sections(data)
+    plot_NP_sections(ax_NP, data, M, T, sections)
+    plot_MP_sections(ax_MP, data, N, T, sections)
+    plot_TP_sections(ax_TP, data, N, M, sections)
 
     plot_regions_pie(ax_S, data, "Sections")
 
