@@ -65,6 +65,10 @@ def get_experiment_info(data):
     return data[csv_cols.BINARY].iloc[0], data[csv_cols.FLAGS].iloc[0]
 
 
+def get_sections(data):
+    return data[csv_cols.SECTION].unique()
+
+
 def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
 
@@ -76,12 +80,13 @@ def format_plot(ax, xlabel, ylabel, title):
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
     ax.legend(loc='lower right')
+    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.set_ylim(ymin=0)
 
 
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
@@ -94,7 +99,6 @@ def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
 def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
@@ -107,7 +111,6 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
 def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
     for section in sections:
         x, y = extract_TP_data(data, N, M, section)
-        ax.set_xticks(x)
         ax.plot(x, y, label=section)
 
     format_plot(ax, 
@@ -183,10 +186,11 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     ax_MP = plt.subplot(2, 3, 2)
     ax_TP = plt.subplot(2, 3, 3)
     ax_S  = plt.subplot(2, 3, 5)
- 
-    plot_NP_sections(ax_NP, data, M, T)
-    plot_MP_sections(ax_MP, data, N, T)
-    plot_TP_sections(ax_TP, data, N, M)
+    
+    sections = get_sections(data)
+    plot_NP_sections(ax_NP, data, M, T, sections)
+    plot_MP_sections(ax_MP, data, N, T, sections)
+    plot_TP_sections(ax_TP, data, N, M, sections)
 
     plot_regions_pie(ax_S, data, "Sections")
 
