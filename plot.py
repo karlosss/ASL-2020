@@ -89,7 +89,7 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
     ax.set_ylabel(ylabel, rotation=0)
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
-    ax.legend(loc='lower right')
+    #ax.legend(loc='lower right')
     if is_exp:
         ax.set_xticks([2 ** i for i in range(min_exp, max_exp)])
         ax.set_xscale('log', basex=2)
@@ -253,6 +253,16 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
         os.makedirs(fig_dir)
     fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
     fig_save_path = os.path.join(fig_dir, fig_name)
+    fig = plt.gcf()
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
+
     plt.savefig(fig_save_path)
     plt.show()
     print(f"Figure saved to: {fig_save_path}{suffix}")
