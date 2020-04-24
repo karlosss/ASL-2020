@@ -90,7 +90,7 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
     ax.set_ylabel(ylabel, rotation=0)
     ax.yaxis.set_label_coords(-0.05, 1.0)
     ax.grid(axis='x')
-    ax.legend(loc='lower right')
+    #ax.legend(loc='lower right')
     if is_exp:
         ax.set_xticks([2 ** i for i in range(min_exp, max_exp)])
         ax.set_xscale('log', basex=2)
@@ -160,15 +160,15 @@ def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
 
 
 def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
-    plt.figure(figsize=(15, 6), facecolor='w')
+    plt.figure(figsize=(15, 12), facecolor='w')
 
     fig = plt.gcf()
     fig.suptitle(f"Comparison", fontsize=16)
 
-    ax_NP = plt.subplot(1, 3, 1)
-    ax_MP = plt.subplot(1, 3, 2)
-    ax_TP = plt.subplot(1, 3, 3)
-    
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+
     exp_NP = exp_MP = exp_TP = None
 
     for csv_file in csv_files:
@@ -225,6 +225,14 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         max_exp=max_exp_TP
     )
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
     plt.show()
 
 
@@ -259,6 +267,16 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
         os.makedirs(fig_dir)
     fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
     fig_save_path = os.path.join(fig_dir, fig_name)
+    fig = plt.gcf()
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
+
     plt.savefig(fig_save_path)
     plt.show()
     print(f"Figure saved to: {fig_save_path}{suffix}")
