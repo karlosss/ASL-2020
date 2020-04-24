@@ -156,15 +156,15 @@ def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
 
 
 def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
-    plt.figure(figsize=(15, 6), facecolor='w')
+    plt.figure(figsize=(15, 12), facecolor='w')
 
     fig = plt.gcf()
     fig.suptitle(f"Comparison", fontsize=16)
 
-    ax_NP = plt.subplot(1, 3, 1)
-    ax_MP = plt.subplot(1, 3, 2)
-    ax_TP = plt.subplot(1, 3, 3)
-    
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+
     exp_NP = exp_MP = exp_TP = None
 
     for csv_file in csv_files:
@@ -221,6 +221,14 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         max_exp=max_exp_TP
     )
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
     plt.show()
 
 
