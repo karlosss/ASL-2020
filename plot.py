@@ -278,7 +278,7 @@ def plot_regions_pie(ax, data, title):
     
     ax.set_title(title)
     _, _, autotexts = ax.pie(
-        region_perf[csv_cols.PERFORMANCE], 
+        region_perf[csv_cols.PERFORMANCE]/region_perf[csv_cols.PERFORMANCE].sum(), 
         labels=region_perf[csv_cols.SECTION], 
         autopct='%1.1f%%'
     )
