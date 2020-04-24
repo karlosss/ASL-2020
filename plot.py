@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import python_lib.csv_cols as csv_cols
 import python_lib.constants as constants
+import python_lib.cpu_info as cpu_info
 import random
 import argparse
 
@@ -98,11 +99,14 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
     ax.set_ylim(ymin=-0.2)
 
 
+def plot_series(ax, x, y, label):
+    ax.plot(x, y, '-o', label=label)
+
 def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_NP_data(data, M, T, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -121,7 +125,7 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_MP_data(data, N, T, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -140,7 +144,7 @@ def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
     exp = None
     for section in sections:
         x, y = extract_TP_data(data, N, M, section)
-        ax.plot(x, y, label=section)
+        plot_series(ax, x, y, label=section)
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -181,9 +185,9 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
         x_TP, y_TP = extract_TP_data(data, N, M, section="baum_welch")
 
-        ax_NP.plot(x_NP, y_NP, label=label)
-        ax_MP.plot(x_MP, y_MP, label=label)
-        ax_TP.plot(x_TP, y_TP, label=label)
+        plot_series(ax_NP, x_NP, y_NP, label=label)
+        plot_series(ax_MP, x_MP, y_MP, label=label)
+        plot_series(ax_TP, x_TP, y_TP, label=label)
 
         if exp_NP is None:
             exp_NP = is_exponential(x_NP.tolist())
@@ -239,11 +243,13 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     ax_MP = plt.subplot(2, 3, 2)
     ax_TP = plt.subplot(2, 3, 3)
     ax_S  = plt.subplot(2, 3, 5)
+    ax_table = plt.subplot(2, 3, 4)
     
     sections = get_sections(data)
     plot_NP_sections(ax_NP, data, M, T, sections)
     plot_MP_sections(ax_MP, data, N, T, sections)
     plot_TP_sections(ax_TP, data, N, M, sections)
+    plot_cpu_info_table(ax_table, "CPU Info")
 
     plot_regions_pie(ax_S, data, "Sections")
 
@@ -278,6 +284,31 @@ def plot_regions_pie(ax, data, title):
     )
     for autotext in autotexts:
         autotext.set_color('white')
+
+
+def plot_cpu_info_table(ax, title):
+    row_labels = [
+        "Name:",
+        "Number:",
+        "Base Freq:",
+        "Max Freq:",
+        "Turbo Boost:",
+        "L1 cache:",
+        "L2 cache:",
+        "L3 cache:"
+    ]
+    data = [[item] for item in cpu_info.info_list]
+    table = ax.table(
+        cellText=data ,
+        rowLabels=row_labels,
+        rowLoc='left', 
+        colLoc='left',
+        edges='horizontal',
+        loc='center',
+        bbox=[0.4, 0.0, 0.6, 1.0])
+    table.set_fontsize(16)
+    # table.scale(0.5, 3)
+    ax.axis('off')
 
 
 if __name__ == "__main__":

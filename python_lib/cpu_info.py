@@ -1,0 +1,23 @@
+CPU_NAME = "Intel Whiskey Lake"
+CPU_NUMBER = "i7-8565U"
+CPU_BASE_FRQ = "1.8 GHz"
+CPU_MAX_FRQ = "4.6 GHz"
+TURBO_BOOST = "Enabled"
+L1_CACHE = "32 KiB / 8-way"
+L2_CACHE = "256 KiB / 4-way"
+L3_CACHE = "2 MiB / 16-way"
+WRITE_BANDWIDTH = "TODO"
+READ_BANDWIDTH = "TODO"
+
+info_list = [
+    CPU_NAME,
+    CPU_NUMBER,
+    CPU_BASE_FRQ,
+    CPU_MAX_FRQ,
+    TURBO_BOOST,
+    L1_CACHE,
+    L2_CACHE,
+    L3_CACHE,
+    # WRITE_BANDWIDTH,
+    # READ_BANDWIDTH
+]
