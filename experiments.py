@@ -25,7 +25,8 @@ CSV_HEADER=(
     f"{csv_cols.NUM_ITERATIONS},"
     f"{csv_cols.SECTION},"
     f"{csv_cols.NUM_CYCLES},"
-    f"{csv_cols.PERFORMANCE}\n"
+    f"{csv_cols.PERFORMANCE},"
+    f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
 COMPILER='g++'
@@ -140,8 +141,8 @@ def create_csv(binary, flags, csv_header):
 
 
 #takes a list of lines with comma separated values and writes it to the output csv
-def append_csv(csv_path, lines, binary, flags, n, m, t, iter, compiler):
-    csv_lines = ['{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(binary, compiler, flags, n, m, t, iter, dat) for dat in lines]
+def append_csv(csv_path, lines, binary, flags, n, m, t, iter, compiler, variable):
+    csv_lines = ['{0},{1},{2},{3},{4},{5},{6},{7},{8}\n'.format(binary, compiler, flags, n, m, t, iter, dat, variable) for dat in lines]
     with open(csv_path,'a') as csv:
         for line in csv_lines:
             csv.write(line)
@@ -216,7 +217,7 @@ def compile_all(compiler, flags):
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
-def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path):
+def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path, variable):
 
         #derive path for binary 
         flag_arr = flags.split(' ')
@@ -234,7 +235,7 @@ def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path):
         data = get_data('logs/papi_hl_output', binary, compiler, flags, n, m, t, iters)
 
         #append the line to csv
-        append_csv(csv_path, data, binary, flags, n, m, t, iters, compiler)
+        append_csv(csv_path, data, binary, flags, n, m, t, iters, compiler, variable)
 
 
 def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, compiler):
@@ -252,18 +253,18 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
         
         print("running for N: {0}, M: {1}, T: {2}".format(n,M_fix,T_Fix))
 
-        run_experiment(binary, compiler, flags, n, M_fix, iters, T_Fix, csv_path)
+        run_experiment(binary, compiler, flags, n, M_fix, iters, T_Fix, csv_path, 0)
     for m in M_iter:
 
         print("running for N: {0}, M: {1}, T: {2}".format(N_fix,m,T_Fix))
 
-        run_experiment(binary, compiler, flags, N_fix, m, iters, T_Fix, csv_path)
+        run_experiment(binary, compiler, flags, N_fix, m, iters, T_Fix, csv_path, 1)
         
     for t in T_iter:
 
         print("running for N: {0}, M: {1}, T: {2}".format(N_fix,M_fix,t))
 
-        run_experiment(binary, compiler, flags, N_fix, M_fix, iters, t, csv_path)
+        run_experiment(binary, compiler, flags, N_fix, M_fix, iters, t, csv_path, 2)
     
     print("All experiments done")
     print("Find your output in: {0}".format(csv_path))
@@ -277,7 +278,7 @@ def parse_tuple(arg_name, arg_string, exp):
     # In case of scalar argument return a tuple representing a 1-number range
     if type(t) == int:
         if not exp: return (t, t+1, 1, t+1)
-        else: return (t, t+1, t+1)
+        else: return (t, t+1, t)
 
     elif type(t) == tuple:
         if not exp:
@@ -363,9 +364,14 @@ if __name__=='__main__':
 
     # t_min = T_FACTOR * (max(m_max, n_max))
     if args.e:
+        T_FACTOR = 2
         lower_bound = (2 ** (max(m_max, n_max) - 1)) * T_FACTOR
         t_min = max(t_min, math.ceil(math.log2(lower_bound)))
         t_max = max(t_min+1, t_max)
+        n_fix = 2**n_fix
+        m_fix = 2**m_fix
+        t_fix = 2**t_fix
+        
     else:
         t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
         t_max = max(t_min+1, t_max)
