@@ -36,15 +36,14 @@ COMPILER='g++'
 def read_input():
     parser = argparse.ArgumentParser(
         description=(
-            "Run experiment on a specified binary and write to a csv, "
-            "returns the absolute path to the csv"
+            "Run experiment on a specified source file and write to a csv."
         ),
         formatter_class=argparse.RawTextHelpFormatter   
     )
     parser.add_argument(
-        "-b", "-binary",
-        help='The binary you want the experiments to be run on',
-        dest='bin',default='no_opt'
+        "-s", "-sourcefile",
+        help='The source code you want to be compiled and the experiments to be .',
+        dest='s',default='no_opt'
     )
     parser.add_argument(
         "-f", "--flags",
@@ -57,7 +56,7 @@ def read_input():
     parser.add_argument(
         "-c","--compiler",
         help=(
-           "The compiler to use, i.e gcc or g++; default is g++"
+           "The compiler to use, i.e gcc or g++; default is g++."
            
         ),
         dest="compiler",default="g++"
@@ -93,9 +92,11 @@ def read_input():
         '-e', "--exponential", 
         help=(
             "If set, the 'min' and 'max' of the N, M and T ranges are interpreted\n"
-            "as base 2 exponents and 'step' can be omitted.\n"
+            "as base 2 exponents. The third entry dentotes the fixed value used\n"
+            "when the parameter does not vary. \n"
             "\n"
-            "Example: -e -N=(2,11) --> N ranges over [2^2, 2^3, ..., 2^10]"
+            "Example: -e -N='2,11,5' --> N ranges over [2^2, 2^3, ..., 2^10].\n"
+            "In the M plot and T plot, a fixed value of N=5 is used."
         ),
         dest="e", action='store_true'
     )
@@ -396,7 +397,7 @@ if __name__=='__main__':
     T_iter = create_iterator(T_tuple, args.e)
     
     main(
-        args.bin, 
+        args.s, 
         N_iter, M_iter, T_iter,
         int(args.iters), 
         n_fix, m_fix, t_fix,
