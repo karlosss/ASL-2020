@@ -35,6 +35,7 @@ def extract_NP_data(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
         & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 0)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
@@ -44,6 +45,7 @@ def extract_MP_data(data, N, T, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
         & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 1)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
@@ -53,6 +55,7 @@ def extract_TP_data(data, N, M, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
         & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.VARIABLE] == 2)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_T], f[csv_cols.PERFORMANCE]
@@ -259,7 +262,7 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     plot_TP_sections(ax_TP, data, N, M, sections)
     plot_cpu_info_table(ax_table, "CPU Info")
 
-    plot_regions_pie(ax_S, data, "Sections")
+    plot_regions_pie(ax_S, data, "Sections", M, T)
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     fig_dir = "figures"
@@ -282,18 +285,16 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     print(f"Figure saved to: {fig_save_path}{suffix}")
 
 
-def plot_regions_pie(ax, data, title):
+def plot_regions_pie(ax, data, title, M_fix, T_fix):
     N_max = data[csv_cols.PARAM_N].max()
-    M_max = data[csv_cols.PARAM_M].max()
-    T_max = data[csv_cols.PARAM_T].max()
 
     region_perf = data[
           (data[csv_cols.PARAM_N] == N_max)
-        & (data[csv_cols.PARAM_M] == M_max)
-        & (data[csv_cols.PARAM_T] == T_max)
+        & (data[csv_cols.PARAM_M] == M_fix)
+        & (data[csv_cols.PARAM_T] == T_fix)
+        & (data[csv_cols.VARIABLE] == 0)
         & (data[csv_cols.SECTION] != 'baum_welch')
     ]
-    
     ax.set_title(title)
     _, _, autotexts = ax.pie(
         region_perf[csv_cols.PERFORMANCE]/region_perf[csv_cols.PERFORMANCE].sum(), 

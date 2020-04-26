@@ -17,6 +17,7 @@ from python_lib.constants import OUTPUT_DIR, SECTIONS
 #GLOBALS
 CSV_HEADER=(
     f"{csv_cols.BINARY},"
+    f"{csv_cols.COMPILER},"
     f"{csv_cols.FLAGS},"
     f"{csv_cols.PARAM_N},"
     f"{csv_cols.PARAM_M},"
@@ -24,7 +25,8 @@ CSV_HEADER=(
     f"{csv_cols.NUM_ITERATIONS},"
     f"{csv_cols.SECTION},"
     f"{csv_cols.NUM_CYCLES},"
-    f"{csv_cols.PERFORMANCE}\n"
+    f"{csv_cols.PERFORMANCE},"
+    f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
 COMPILER='g++'
@@ -34,15 +36,15 @@ COMPILER='g++'
 def read_input():
     parser = argparse.ArgumentParser(
         description=(
-            "Run experiment on a specified binary and write to a csv, "
-            "returns the absolute path to the csv"
+            "Run experiment on a specified source file and write to a csv."
         ),
         formatter_class=argparse.RawTextHelpFormatter   
     )
     parser.add_argument(
-        "-b", "-binary",
-        help='The binary you want the experiments to be run on',
-        dest='bin',default='no_opt')
+        "-s", "-sourcefile",
+        help='The source code you want to be compiled and the experiments to be .',
+        dest='s',default='no_opt'
+    )
     parser.add_argument(
         "-f", "--flags",
         help=(
@@ -52,27 +54,49 @@ def read_input():
         dest="flags", default="O0"
     )
     parser.add_argument(
+        "-c","--compiler",
+        help=(
+           "The compiler to use, i.e gcc or g++; default is g++."
+           
+        ),
+        dest="compiler",default="g++"
+    )
+    parser.add_argument(
         "-N", "--hidden-states",
-        help="-N='min, max, step' for range or simply '-N=10' for fixed N.",
-        dest="N", default="1, 11, 1"
+        help=(
+            "-N='min, max, step, fix' for range or simply '-N=10' for fixed N.\n"
+            "If only three args are provided, the third one is assumed to be step.\n"
+            "except for when -e is set, in which case it will be interpreted as fix."
+        ),
+        dest="N", default="1, 11, 1, 11"
     )
     parser.add_argument(
         "-M", "--observation-alphabet-size", 
-        help="-M='min, max, step' for range or simply '-M=10' for fixed M.",
-        dest="M", default="1, 11, 1"
+        help=(
+            "-M='min, max, step, fix' for range or simply '-M=10' for fixed M.\n"
+            "If only three args are provided, the third one is assumed to be step.\n"
+            "except for when -e is set, in which case it will be interpreted as fix."
+            ),
+        dest="M", default="1, 11, 1, 11"
     )
     parser.add_argument(
         "-T", "--sequence-length", 
-        help="-T='min, max, step' for range or simply '-T=10' for fixed T.",
-        dest="T", default="10, 20, 1"
+        help=(
+            "-T='min, max, step, fix' for range or simply '-T=10' for fixed T.\n"
+            "If only three args are provided, the third one is assumed to be step,\n"
+            "except for when -e is set, in which case it will be interpreted as fix."
+            ),
+        dest="T", default="10, 20, 1, 20"
     )
     parser.add_argument(
         '-e', "--exponential", 
         help=(
             "If set, the 'min' and 'max' of the N, M and T ranges are interpreted\n"
-            "as base 2 exponents and 'step' can be omitted.\n"
+            "as base 2 exponents. The third entry dentotes the fixed value used\n"
+            "when the parameter does not vary. \n"
             "\n"
-            "Example: -e -N=(2,11) --> N ranges over [2^2, 2^3, ..., 2^10]"
+            "Example: -e -N='2,11,5' --> N ranges over [2^2, 2^3, ..., 2^10].\n"
+            "In the M plot and T plot, a fixed value of N=5 is used."
         ),
         dest="e", action='store_true'
     )
@@ -118,20 +142,20 @@ def create_csv(binary, flags, csv_header):
 
 
 #takes a list of lines with comma separated values and writes it to the output csv
-def append_csv(csv_path, lines, binary, flags, n, m, t, iter):
-    csv_lines = ['{0},{1},{2},{3},{4},{5},{6}\n'.format(binary, flags, n, m, t, iter, dat) for dat in lines]
+def append_csv(csv_path, lines, binary, flags, n, m, t, iter, compiler, variable):
+    csv_lines = ['{0},{1},{2},{3},{4},{5},{6},{7},{8}\n'.format(binary, compiler, flags, n, m, t, iter, dat, variable) for dat in lines]
     with open(csv_path,'a') as csv:
         for line in csv_lines:
             csv.write(line)
 
 
-def get_flops_from_binary(binary, flags, n, m, t, iters):
+def get_flops_from_binary(binary, compiler, flags, n, m, t, iters):
     #call binary directly to get flop count
 
     #derive path for binary
     flags_arr = flags.split(' ')
     flags_arr = ['-{0}'.format(f) for f in flags_arr]
-    flag_string = '{1}_{0}'.format('_'.join(flags_arr),COMPILER)
+    flag_string = '{1}_{0}'.format('_'.join(flags_arr), compiler)
     exec_path = './bin/{0}/{1} flops <<< \"{2} {3} {4} {5}\"'.format(flag_string,binary, n, m, t, iters)
 
     stream = os.popen(exec_path)
@@ -140,7 +164,7 @@ def get_flops_from_binary(binary, flags, n, m, t, iters):
     return int(exp_out)
 
 #Takes the path to PAPI logs, parses jsons and return a list of csv lines; one line for every region
-def get_data(json_path, binary, flags, n, m, t, iters):
+def get_data(json_path, binary, compiler, flags, n, m, t, iters):
     out=[]
     for file in os.scandir(json_path):
         with open(file) as f:
@@ -168,7 +192,7 @@ def get_data(json_path, binary, flags, n, m, t, iters):
                 name = SECTIONS[0]
                 reg = regions[0][name]
                 cycles = reg['cycles']
-                flops = get_flops_from_binary(binary, flags, n, m, t, iters)
+                flops = get_flops_from_binary(binary, compiler, flags, n, m, t, iters)
                 performance=flops/int(cycles)
                 out.append('{0},{1},{2}'.format(name,cycles,performance))
 
@@ -180,13 +204,13 @@ def get_data(json_path, binary, flags, n, m, t, iters):
 
 
 #compiles all binaries present with provided flags
-def compile_all(flags):
+def compile_all(compiler, flags):
     print("Compiling with {0}".format(flags))
     #append "-" to flags
     flags = ['-{0}'.format(f) for f in flags.split(' ')]
 
     args = flags
-    args.insert(0,COMPILER)
+    args.insert(0,compiler)
     args.insert(0,'./compile.sh')
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -194,13 +218,13 @@ def compile_all(flags):
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
-def run_experiment(binary, flags, n, m, iters, t, csv_path):
+def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path, variable):
 
         #derive path for binary 
         flag_arr = flags.split(' ')
         flag_arr = ['-{0}'.format(f) for f in flag_arr]
         args = flag_arr
-        args.insert(0,COMPILER)
+        args.insert(0,compiler)
         args.insert(0,binary)
         args.insert(0,'./run.sh')
 
@@ -209,53 +233,70 @@ def run_experiment(binary, flags, n, m, iters, t, csv_path):
         exp_out = exp.communicate(input=('{0} {1} {2} {3}'.format(n,m,iters,t)).encode('utf-8'))
 
         #retrieve data from PAPI json and form a comma separated value line
-        data = get_data('logs/papi_hl_output', binary, flags, n, m, t, iters)
+        data = get_data('logs/papi_hl_output', binary, compiler, flags, n, m, t, iters)
 
         #append the line to csv
-        append_csv(csv_path, data, binary, flags, n, m, t, iters)
+        append_csv(csv_path, data, binary, flags, n, m, t, iters, compiler, variable)
 
 
-def main(binary, N_iter, M_iter, T_iter, iters, flags):
+def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, compiler):
     #create a csv
     csv_path = create_csv(binary, flags, CSV_HEADER)
     print("CSV Created")
 
+
     #compilation
-    compile_all(flags)
+    compile_all(compiler, flags)
     print("Files compiled")
                 
     #run all experiments
+
+    print("=== Computing N plot data ===")
     for n in N_iter:
-        for m in M_iter:
-            for t in T_iter:
-
-                print("running for N: {0}, M: {1}, T: {2}".format(n,m,t))
-
-                run_experiment(binary, flags, n, m, iters, t, csv_path)
+        print("running for N: {0}, M: {1}, T: {2}".format(n,M_fix,T_Fix))
+        run_experiment(binary, compiler, flags, n, M_fix, iters, T_Fix, csv_path, 0)
+    
+    print("\n=== Computing M plot data ===")
+    for m in M_iter:
+        print("running for N: {0}, M: {1}, T: {2}".format(N_fix,m,T_Fix))
+        run_experiment(binary, compiler, flags, N_fix, m, iters, T_Fix, csv_path, 1)
+        
+    print("\n=== Computing T plot data ===")
+    for t in T_iter:
+        print("running for N: {0}, M: {1}, T: {2}".format(N_fix,M_fix,t))
+        run_experiment(binary, compiler, flags, N_fix, M_fix, iters, t, csv_path, 2)
     
     print("All experiments done")
     print("Find your output in: {0}".format(csv_path))
 
     print(f"Plotting summary...")
-    plot.multiplot_NP_MP_TP_S(csv_path)
+    plot.multiplot_NP_MP_TP_S(csv_path, N_fix, M_fix, T_Fix)
     
 
 def parse_tuple(arg_name, arg_string, exp):
     t = make_tuple(arg_string)
     # In case of scalar argument return a tuple representing a 1-number range
     if type(t) == int:
-        if not exp: return (t, t+1, 1)
-        else: return (t, t+1)
+        if not exp: return (t, t+1, 1, t+1)
+        else: return (t, t+1, t)
 
     elif type(t) == tuple:
         if not exp:
-            if len(t) == 3:
+            if len(t) == 4:
+                    _min, _max, _step, _fix = t
+            elif len(t) == 3:
                     _min, _max, _step = t
+                    _fix = _max
+                    print(
+                        f"Warning for argumet '{arg_name}': No fixed value provided. "
+                        f"Using max value."
+                    )
             elif len(t) == 2: 
                 (_min, _max), _step = t, 1
+                _fix = _max
                 print(
-                    f"Warning for argument '{arg_name}': No step size p provided. "
-                    f"Using stepsize 1."
+                    f"Warning for argument '{arg_name}': No step size p and no fixed value provided. "
+                    f"Using stepsize 1 and fixed value max."
                 )
             else: 
                 print(f"Error in argument '{arg_name}': Tuple {t} too long.")
@@ -268,16 +309,20 @@ def parse_tuple(arg_name, arg_string, exp):
             if _step < 0:
                 print(f"Error in argument '{arg_name}': Negative stepsize.")
                 return None
-            return (_min, _max+1, _step)
+            return (_min, _max+1, _step, _fix)
         else:
-            if len(t) == 3:
-                _min, _max, _ = t
+            if len(t) == 4:
+                _min, _max, _, _fix = t
                 print(
                     f"Warning for argument '{arg_name}': Stepsize will be ignored because"
                     f"'-e' flag is set."
                 )
+            elif len(t) == 3:
+                _min, _max, _fix = t
+
             elif len(t) == 2:
                 _min, _max = t
+                _fix = _max
             else: 
                 print(f"Error in argument '{arg_name}': Tuple {t} too long.")
                 return None
@@ -286,7 +331,7 @@ def parse_tuple(arg_name, arg_string, exp):
             if _min > _max:
                 print(f"Error in argument '{arg_name}': Min={_min} is larger than max={_max}.")
                 return None
-            return (_min, _max+1)
+            return (_min, _max+1, _fix)
 
 
 
@@ -302,32 +347,60 @@ if __name__=='__main__':
         print(f"Abort")
         exit(1)   
 
-    n_min, n_max, *_ = N_tuple
-    m_min, m_max, *_ = M_tuple
-    t_min, t_max, *t_step = T_tuple
+    if len(N_tuple) == 4:
+        n_min, n_max, _, n_fix = N_tuple
+    else:
+        n_min, n_max, n_fix = N_tuple
+
+    if len(M_tuple) == 4:        
+        m_min, m_max, _, m_fix = M_tuple
+    else:
+        m_min, m_max, m_fix = M_tuple
+
+    if len(T_tuple) == 4:
+        t_min, t_max, t_step, t_fix = T_tuple
+    else:
+        t_min, t_max, t_fix = T_tuple
 
     # t_min = T_FACTOR * (max(m_max, n_max))
     if args.e:
+        T_FACTOR = 2
         lower_bound = (2 ** (max(m_max, n_max) - 1)) * T_FACTOR
         t_min = max(t_min, math.ceil(math.log2(lower_bound)))
         t_max = max(t_min+1, t_max)
+        t_fix = max(t_min, t_fix)
+        n_fix = 2**n_fix
+        m_fix = 2**m_fix
+        t_fix = 2**t_fix
+        
     else:
         t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
         t_max = max(t_min+1, t_max)
+        t_fix = max(t_min, t_fix)
     
     # Update T_tuple with adusted parameters.
-    T_tuple = tuple([t_min, t_max, *t_step])
+    if args.e:
+        t_step = 1
+    T_tuple = tuple([t_min, t_max, t_step, t_fix])
     def create_iterator(t, exp):
-        if not exp: return list(range(*t))
-        else: return [2**i for i in range(*t)]
+        if not exp:
+            if len(t) == 4:
+                t = (t[0],t[1],t[2])
+            return list(range(*t))
+        else: 
+            t = (t[0],t[1])
+            return [2**i for i in range(*t)]
     
+
     N_iter = create_iterator(N_tuple, args.e)    
     M_iter = create_iterator(M_tuple, args.e)    
     T_iter = create_iterator(T_tuple, args.e)
     
     main(
-        args.bin, 
+        args.s, 
         N_iter, M_iter, T_iter,
         int(args.iters), 
-        args.flags
+        n_fix, m_fix, t_fix,
+        args.flags,
+        args.compiler
     )
