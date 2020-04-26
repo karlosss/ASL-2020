@@ -249,21 +249,20 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     print("Files compiled")
                 
     #run all experiments
+
+    print("=== Computing N plot data ===")
     for n in N_iter:
-        
         print("running for N: {0}, M: {1}, T: {2}".format(n,M_fix,T_Fix))
-
         run_experiment(binary, compiler, flags, n, M_fix, iters, T_Fix, csv_path, 0)
+    
+    print("\n=== Computing M plot data ===")
     for m in M_iter:
-
         print("running for N: {0}, M: {1}, T: {2}".format(N_fix,m,T_Fix))
-
         run_experiment(binary, compiler, flags, N_fix, m, iters, T_Fix, csv_path, 1)
         
+    print("\n=== Computing T plot data ===")
     for t in T_iter:
-
         print("running for N: {0}, M: {1}, T: {2}".format(N_fix,M_fix,t))
-
         run_experiment(binary, compiler, flags, N_fix, M_fix, iters, t, csv_path, 2)
     
     print("All experiments done")
