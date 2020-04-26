@@ -35,6 +35,7 @@ def extract_NP_data(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
         & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 0)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
@@ -44,6 +45,7 @@ def extract_MP_data(data, N, T, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
         & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 1)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
@@ -53,6 +55,7 @@ def extract_TP_data(data, N, M, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
         & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.VARIABLE] == 2)
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_T], f[csv_cols.PERFORMANCE]
