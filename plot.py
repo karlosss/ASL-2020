@@ -262,7 +262,7 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     plot_TP_sections(ax_TP, data, N, M, sections)
     plot_cpu_info_table(ax_table, "CPU Info")
 
-    plot_regions_pie(ax_S, data, "Sections")
+    plot_regions_pie(ax_S, data, "Sections", M, T)
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     fig_dir = "figures"
@@ -285,18 +285,17 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     print(f"Figure saved to: {fig_save_path}{suffix}")
 
 
-def plot_regions_pie(ax, data, title):
+def plot_regions_pie(ax, data, title, M_fix, T_fix):
     N_max = data[csv_cols.PARAM_N].max()
-    M_max = data[csv_cols.PARAM_M].max()
-    T_max = data[csv_cols.PARAM_T].max()
 
     region_perf = data[
           (data[csv_cols.PARAM_N] == N_max)
-        & (data[csv_cols.PARAM_M] == M_max)
-        & (data[csv_cols.PARAM_T] == T_max)
+        & (data[csv_cols.PARAM_M] == M_fix)
+        & (data[csv_cols.PARAM_T] == T_fix)
         & (data[csv_cols.SECTION] != 'baum_welch')
     ]
-    
+    # print("Region Perf is:")
+    # print(region_perf)
     ax.set_title(title)
     _, _, autotexts = ax.pie(
         region_perf[csv_cols.PERFORMANCE]/region_perf[csv_cols.PERFORMANCE].sum(), 
