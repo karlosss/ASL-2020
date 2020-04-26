@@ -117,18 +117,21 @@ def read_input():
 
 #takes the name of a binary and a set of flags, creates a csv to write experiment results to
 #returns the path to the csv
-def create_csv(binary, flags, csv_header):
+def create_csv(binary, compiler, flags, csv_header):
 
     #make string of flags
     flag_string= ('_').join(flags.split(' '))
 
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
     #create name for csv
-    csv_name=str("{0}%{1}.csv".format(binary, flag_string))
+    dir_name = str("{0}%{1}_{2}%{3}".format(binary, compiler, flag_string, timestamp))
+    csv_name= "report.csv"
 
     #get absolute path for csv
     path = os.path.dirname(__file__)
 
-    path = os.path.join(path, OUTPUT_DIR)
+    path = os.path.join(path, OUTPUT_DIR, dir_name)
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -138,7 +141,7 @@ def create_csv(binary, flags, csv_header):
     with open(csv_path,'w+') as csv:
         csv.write(csv_header)
 
-    return csv_path
+    return csv_path, path
 
 
 #takes a list of lines with comma separated values and writes it to the output csv
@@ -241,7 +244,7 @@ def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path, variable):
 
 def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, compiler):
     #create a csv
-    csv_path = create_csv(binary, flags, CSV_HEADER)
+    csv_path, dir_path = create_csv(binary, compiler, flags, CSV_HEADER)
     print("CSV Created")
 
 
@@ -270,7 +273,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     print("Find your output in: {0}".format(csv_path))
 
     print(f"Plotting summary...")
-    plot.multiplot_NP_MP_TP_S(csv_path, N_fix, M_fix, T_Fix)
+    plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix)
     
 
 def parse_tuple(arg_name, arg_string, exp):
