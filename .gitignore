@@ -9,8 +9,7 @@ bin/*
 logs/
 !bin/.gitkeep
 papi/
-output_data/
-figures/
+experiments/
 venv/
 __pycache__/
 *.pyc
