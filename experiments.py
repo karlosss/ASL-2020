@@ -375,6 +375,7 @@ if __name__=='__main__':
     else:
         t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
         t_max = max(t_min+1, t_max)
+        t_fix = max(t_min, t_fix)
     
     # Update T_tuple with adusted parameters.
     if args.e:
