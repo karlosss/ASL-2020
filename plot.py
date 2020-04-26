@@ -76,7 +76,7 @@ def adjust_param(data, param, value):
 
 
 def get_experiment_info(data):
-    return data[csv_cols.BINARY].iloc[0], data[csv_cols.FLAGS].iloc[0]
+    return data[csv_cols.BINARY].iloc[0], data[csv_cols.COMPILER].iloc[0], data[csv_cols.FLAGS].iloc[0]
 
 
 def get_sections(data):
@@ -177,16 +177,17 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     for csv_file in csv_files:
         data = pd.read_csv(csv_file)
 
-        N = adjust_param(data, csv_cols.PARAM_N, N)
-        M = adjust_param(data, csv_cols.PARAM_M, M)
-        T = adjust_param(data, csv_cols.PARAM_T, T)
+        # get the fixed parameters in the experiment
+        N_fix = data[data[csv_cols.VARIABLE] == 1][csv_cols.PARAM_N].iloc[0]
+        M_fix = data[data[csv_cols.VARIABLE] == 2][csv_cols.PARAM_M].iloc[0]
+        T_fix = data[data[csv_cols.VARIABLE] == 0][csv_cols.PARAM_T].iloc[0]
 
-        binary_name, flags = get_experiment_info(data)
-        label = f"{binary_name}, {flags}"
+        binary_name, compiler, flags = get_experiment_info(data)
+        label = f"{binary_name}, {compiler}, {flags}"
 
-        x_NP, y_NP = extract_NP_data(data, M, T, section="baum_welch")
-        x_MP, y_MP = extract_MP_data(data, N, T, section="baum_welch")
-        x_TP, y_TP = extract_TP_data(data, N, M, section="baum_welch")
+        x_NP, y_NP = extract_NP_data(data, M_fix, T_fix, section="baum_welch")
+        x_MP, y_MP = extract_MP_data(data, N_fix, T_fix, section="baum_welch")
+        x_TP, y_TP = extract_TP_data(data, N_fix, M_fix, section="baum_welch")
 
         plot_series(ax_NP, x_NP, y_NP, label=label)
         plot_series(ax_MP, x_MP, y_MP, label=label)
@@ -206,7 +207,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     format_plot(ax_NP, 
         xlabel=csv_cols.PARAM_N,
         ylabel=f"Perf [F/C]",
-        title=f"M = {M}, T = {T}",
+        title=f"M = {M_fix}, T = {T_fix}",
         is_exp=exp_NP, 
         min_exp=min_exp_NP, 
         max_exp=max_exp_NP
@@ -214,7 +215,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     format_plot(ax_MP, 
         xlabel=csv_cols.PARAM_M,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, T = {T}",
+        title=f"N = {N_fix}, T = {T_fix}",
         is_exp=exp_MP, 
         min_exp=min_exp_MP, 
         max_exp=max_exp_MP
@@ -222,7 +223,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     format_plot(ax_TP, 
         xlabel=csv_cols.PARAM_T,
         ylabel=f"Perf [F/C]",
-        title=f"N = {N}, M = {M}",
+        title=f"N = {N_fix}, M = {M_fix}",
         is_exp=exp_TP, 
         min_exp=min_exp_TP, 
         max_exp=max_exp_TP
@@ -239,16 +240,16 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.show()
 
 
-def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
+def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None):
     data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
     T = adjust_param(data, csv_cols.PARAM_T, T)
     plt.figure(figsize=(15, 12), facecolor='w')
-    binary_name, flags = get_experiment_info(data)
+    binary_name,compiler, flags = get_experiment_info(data)
 
     fig = plt.gcf()
-    fig.suptitle(f"Binary: {binary_name}, Flags: {flags}", fontsize=16)
+    fig.suptitle(f"Binary: {binary_name}, Compiler: {compiler}, Flags: {flags}", fontsize=16)
 
     ax_NP = plt.subplot(2, 3, 1)
     ax_MP = plt.subplot(2, 3, 2)
@@ -265,10 +266,10 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
     plot_regions_pie(ax_S, data, "Sections", M, T)
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
-    fig_dir = "figures"
+    fig_dir = save_dir
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
-    fig_name, suffix = os.path.splitext(os.path.basename(csv_file))
+    fig_name = "plot"
     fig_save_path = os.path.join(fig_dir, fig_name)
     fig = plt.gcf()
     handles, labels = ax_NP.get_legend_handles_labels()
@@ -282,7 +283,7 @@ def multiplot_NP_MP_TP_S(csv_file, N=None, M=None, T=None):
 
     plt.savefig(fig_save_path)
     plt.show()
-    print(f"Figure saved to: {fig_save_path}{suffix}")
+    print(f"Figure saved to: {fig_save_path}")
 
 
 def plot_regions_pie(ax, data, title, M_fix, T_fix):
@@ -333,23 +334,28 @@ def plot_cpu_info_table(ax, title):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Compare the performance of the specified experiments')
 
-    parser.add_argument('--csv_files', '-f', nargs='+', help='A list of csv files with data to compare.')
-    parser.add_argument('--directory', '-d', help='Directory containing csv files with data to compare.')
+    parser.add_argument('--experiment_dir', '-e', nargs='+', help='A list of experiment directory paths with data to compare.')
+    parser.add_argument('--directory', '-d', help='Directory containing experiment directories with data to compare.')
     
     args = parser.parse_args()
     csv_files = []
     directory = None
-    if (args.csv_files is not None):
-        csv_files = args.csv_files
+    if (args.experiment_dir is not None):
+        for experiment_dir in args.experiment_dir:
+            for filename in os.listdir(experiment_dir):
+                if filename.endswith(".csv"):
+                    csv_files.append(os.path.join(experiment_dir, filename))
+
     else:
         if (args.directory is not None):
             directory = args.directory
         else:
             print(f"No arguments specified. Comparing all csv files in directory '{constants.OUTPUT_DIR}'.")
             directory = constants.OUTPUT_DIR
-
-        for filename in os.listdir(directory):
-            if filename.endswith(".csv"):
-                csv_files.append(os.path.join(directory, filename))
+        for experiment_dir in os.listdir(directory):
+            experiment = os.path.join(directory, experiment_dir)
+            for filename in os.listdir(experiment):
+                if filename.endswith(".csv"):
+                    csv_files.append(os.path.join(experiment, filename))
 
     multiplot_NP_M_comparison(csv_files)
