@@ -292,10 +292,11 @@ def plot_regions_pie(ax, data, title, M_fix, T_fix):
           (data[csv_cols.PARAM_N] == N_max)
         & (data[csv_cols.PARAM_M] == M_fix)
         & (data[csv_cols.PARAM_T] == T_fix)
+        & (data[csv_cols.VARIABLE] == 0)
         & (data[csv_cols.SECTION] != 'baum_welch')
     ]
-    # print("Region Perf is:")
-    # print(region_perf)
+    print("Region Perf is:")
+    print(region_perf)
     ax.set_title(title)
     _, _, autotexts = ax.pie(
         region_perf[csv_cols.PERFORMANCE]/region_perf[csv_cols.PERFORMANCE].sum(), 
