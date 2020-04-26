@@ -368,6 +368,7 @@ if __name__=='__main__':
         lower_bound = (2 ** (max(m_max, n_max) - 1)) * T_FACTOR
         t_min = max(t_min, math.ceil(math.log2(lower_bound)))
         t_max = max(t_min+1, t_max)
+        t_fix = max(t_min, t_fix)
         n_fix = 2**n_fix
         m_fix = 2**m_fix
         t_fix = 2**t_fix
