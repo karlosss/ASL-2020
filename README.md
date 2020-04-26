@@ -29,17 +29,22 @@ The `run.sh` has multiple modes:
 - Input is 4 integers - N, M, T, num_iters - separated by a space
 
 ## Running experiments
-Run 'experiments.py' specifying the binary to run on, the flags you want to use and the ranges to run over.
+An 'experiment' consists of:
+- A source file containing optimization code to be run.
+- A compiler to to compile the source file.
+- A list of compiler flags for the specified comiler.
+- Three ranges for the three performance plots to be generated:
+  * N plot: Varies N while keeping T and M fixed.
+  * M plot: Varies M while keeping N and T fixed.
+  * T plot: Varies T while keeping N and M fixed.
+- A flag 'e' specified whether the ranges are sampled linearly or exponentially (base 2)
+For more details run `./experiments.py --help`.
 
-An example would be:
-- 'experiments.py -b no-opt -f 'O3 fno-tree-vectorize' -n_min 20 -n_max 30 -n_step 1' (runs no-opt with -O3 -fno-tree-vectorize for n=20,...,30)
-Optional Arguments are:
-- '-b' : the binary to run on (default no-opt)
-- '-f' : a string of whitespace separated flags (default O0)
-- '-n_min, -n_max, -n_step, -m_min, -m_max, -m_step, -t_min, -t_max, -t_step, -i': the range parameters for the experiment (default n=20, m=20, t=multiple of max(m,n), i=50)
+The experiment involves compiling the source code with the specified compiler and flags. The resulting binary is then run over the specified ranges while benchmarking the performances for the different inputs and storing the measured data in a .csv file in 'output_data'. Furthermore, a performance plot is generated automatically after a run of `experiments.py` and stored under `figures/`.
 
-## Plotting
-A performance plot is generated automatically after a run of `experiments.py`.
+Example:
+
+## Comparison Plots
 Run `plot.py` to generate plot comparing the performance measurements already measured from previous runs of `experiments.py`. The options are:
 - `-f FILELIST`: Compare the performances of all .csv files in the comma separated list `FILELIST`.
 - `-d DIRECTORY`: Compare the performances of all .csv files inside `DIRECTORY`.
