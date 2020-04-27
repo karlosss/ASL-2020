@@ -240,7 +240,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.show()
 
 
-def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None):
+def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None, show_plot=False):
     data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
     M = adjust_param(data, csv_cols.PARAM_M, M)
@@ -282,8 +282,9 @@ def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None):
     )
 
     plt.savefig(fig_save_path)
-    plt.show()
-    print(f"Figure saved to: {fig_save_path}")
+    if(show_plot):
+        plt.show()
+    print(f"Figure saved to: {fig_save_path}.png")
 
 
 def plot_regions_pie(ax, data, title, M_fix, T_fix):

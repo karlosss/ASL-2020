@@ -273,7 +273,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     print("Find your output in: {0}".format(csv_path))
 
     print(f"Plotting summary...")
-    plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix)
+    plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     
 
 def parse_tuple(arg_name, arg_string, exp):
