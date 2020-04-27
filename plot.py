@@ -82,6 +82,13 @@ def get_experiment_info(data):
 def get_sections(data):
     return data[csv_cols.SECTION].unique()
 
+def get_fixed_variables(data):
+    N_fix = data[data[csv_cols.VARIABLE] == 1][csv_cols.PARAM_N].iloc[0]
+    M_fix = data[data[csv_cols.VARIABLE] == 2][csv_cols.PARAM_M].iloc[0]
+    T_fix = data[data[csv_cols.VARIABLE] == 0][csv_cols.PARAM_T].iloc[0]
+
+    return N_fix, M_fix, T_fix
+
 
 def comparison_data_generator_NP(data_generator, M, T):
     return (extract_NP_data(data, M, T, "baum_welch") for data in data_generator)
@@ -179,9 +186,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         data = pd.read_csv(csv_file)
 
         # get the fixed parameters in the experiment
-        N_fix = data[data[csv_cols.VARIABLE] == 1][csv_cols.PARAM_N].iloc[0]
-        M_fix = data[data[csv_cols.VARIABLE] == 2][csv_cols.PARAM_M].iloc[0]
-        T_fix = data[data[csv_cols.VARIABLE] == 0][csv_cols.PARAM_T].iloc[0]
+        N_fix, M_fix, T_fix = get_fixed_variables(data)
 
         binary_name, compiler, flags = get_experiment_info(data)
         label = f"{binary_name}, {compiler}, {flags}"
@@ -339,18 +344,26 @@ if __name__ == "__main__":
 
     parser.add_argument('--experiment_dir', '-e', nargs='+', help='A list of experiment directory paths with data to compare.')
     parser.add_argument('--directory', '-d', help='Directory containing experiment directories with data to compare.')
+    parser.add_argument('--recreate', '-r', help='Path to .csv experiment report file to recreate the plot from.')
     
     args = parser.parse_args()
     csv_files = []
     directory = None
-    if (args.experiment_dir is not None):
+    if args.experiment_dir is not None:
         for experiment_dir in args.experiment_dir:
             for filename in os.listdir(experiment_dir):
                 if filename.endswith(".csv"):
                     csv_files.append(os.path.join(experiment_dir, filename))
 
+    elif args.recreate is not None:
+        csv_path = args.recreate
+        data = pd.read_csv(csv_path)
+        N_fix, M_fix, T_fix = get_fixed_variables(data)
+        dir_path = os.path.dirname(csv_path)
+        multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_fix, False)
+        exit(0)
     else:
-        if (args.directory is not None):
+        if args.directory is not None:
             directory = args.directory
         else:
             print(f"No arguments specified. Comparing all csv files in directory '{constants.OUTPUT_DIR}'.")
