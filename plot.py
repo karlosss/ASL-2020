@@ -171,6 +171,7 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     ax_NP = plt.subplot(2, 3, 1)
     ax_MP = plt.subplot(2, 3, 2)
     ax_TP = plt.subplot(2, 3, 3)
+    ax_table = plt.subplot(2,3,4)
 
     exp_NP = exp_MP = exp_TP = None
 
@@ -228,7 +229,8 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         min_exp=min_exp_TP, 
         max_exp=max_exp_TP
     )
-    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    plot_cpu_info_table(ax_table, "CPU Info")
+    fig.tight_layout(pad=4.0, rect=[0, 0.0, 1, 0.95])
     handles, labels = ax_NP.get_legend_handles_labels()
     fig.legend(
         handles, 
@@ -326,8 +328,8 @@ def plot_cpu_info_table(ax, title):
         colLoc='left',
         edges='horizontal',
         loc='center',
-        bbox=[0.4, 0.0, 0.6, 1.0])
-    table.set_fontsize(16)
+        bbox=[0.4, 0.0, 0.7, 1.0])
+    table.set_fontsize(18)
     # table.scale(0.5, 3)
     ax.axis('off')
 
