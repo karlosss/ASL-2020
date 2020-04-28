@@ -30,7 +30,6 @@ CSV_HEADER=(
     f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
-COMPILER='g++'
 
 #########################
 
@@ -57,7 +56,7 @@ def read_input():
     parser.add_argument(
         "-c","--compiler",
         help=(
-           "The compiler to use, i.e gcc or g++; default is g++."
+           "The compiler to use, i.e. clang or g++; default is g++."
            
         ),
         dest="compiler",default="g++"
@@ -205,6 +204,16 @@ def get_data(json_path, binary, compiler, flags, n, m, t, iters):
         os.remove(f)
     return out
 
+# display realtime output of a process and return its exit code when it is finished.
+def get_realtime_output(process):
+    while True:
+        if process.poll() is not None:
+            return process.poll()
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip().decode("utf8"))
 
 
 #compiles all binaries present with provided flags
@@ -218,8 +227,8 @@ def compile_all(compiler, flags):
     args.insert(0,'./compile.sh')
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-    comp.communicate()
-    if comp.returncode != 0:
+    retcode = get_realtime_output(comp)
+    if retcode != 0:
         print("Some files could not be compiled or validated!", file=sys.stderr)
         exit(1)
 
