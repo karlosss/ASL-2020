@@ -1,5 +1,5 @@
 
-OUTPUT_DIR='output_data'
+OUTPUT_DIR='experiments'
 SECTIONS=[
     'baum_welch',
     'forward_vars',

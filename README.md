@@ -40,14 +40,14 @@ An 'experiment' consists of:
 - A flag 'e' specified whether the ranges are sampled linearly or exponentially (base 2)
 For more details run `./experiments.py --help`.
 
-The experiment involves compiling the source code with the specified compiler and flags. The resulting binary is then run over the specified ranges while benchmarking the performances for the different inputs and storing the measured data in a .csv file in 'output_data'. Furthermore, a performance plot is generated automatically after a run of `experiments.py` and stored under `figures/`.
+The experiment involves compiling the source code with the specified compiler and flags. The resulting binary is then run over the specified ranges while benchmarking the performances for the different inputs and storing the measured data in report.csv file in folder inside `experiments` where the filename of the folder is based on the source file, compiler, flags and a timestamp. Furthermore, a performance plot is generated automatically after a run of `experiments.py` and stored inside the same folder.
 
 Example:
 `./experiments.py -s no_opt -c 'g++' -f 'Ofast' -N='1,4,3' -M='1,6,5' -T='6,10' -p -e `
 
 ## Comparison Plots
 Run `plot.py` to generate plot comparing the performance measurements already measured from previous runs of `experiments.py`. The options are:
-- `-f FILELIST`: Compare the performances of all .csv files in the comma separated list `FILELIST`.
-- `-d DIRECTORY`: Compare the performances of all .csv files inside `DIRECTORY`.
+- `-e EXPERIMENT_DIR`: Compare the performances of all `report.csv` files in the space separated list of experiment directy paths `EXPERIMENT_DIR`.
+- `-d DIRECTORY`: Compare the performances of all `report.csv` files of the experiment directories inside `DIRECTORY`.
 
-If no arguments are given the folder `./output_dir` is used as the directory.
+If no arguments are given the folder `./experiments` is used as the directory.

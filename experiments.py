@@ -9,6 +9,7 @@ import glob
 import subprocess
 import json
 import plot
+import sys
 from ast import literal_eval as make_tuple
 import python_lib.csv_cols as csv_cols
 from python_lib.constants import OUTPUT_DIR, SECTIONS 
@@ -29,7 +30,6 @@ CSV_HEADER=(
     f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
-COMPILER='g++'
 
 #########################
 
@@ -56,7 +56,7 @@ def read_input():
     parser.add_argument(
         "-c","--compiler",
         help=(
-           "The compiler to use, i.e gcc or g++; default is g++."
+           "The compiler to use, i.e. clang or g++; default is g++."
            
         ),
         dest="compiler",default="g++"
@@ -117,18 +117,21 @@ def read_input():
 
 #takes the name of a binary and a set of flags, creates a csv to write experiment results to
 #returns the path to the csv
-def create_csv(binary, flags, csv_header):
+def create_csv(binary, compiler, flags, csv_header):
 
     #make string of flags
     flag_string= ('_').join(flags.split(' '))
 
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
     #create name for csv
-    csv_name=str("{0}%{1}.csv".format(binary, flag_string))
+    dir_name = str("{0}%{1}_{2}%{3}".format(binary, compiler, flag_string, timestamp))
+    csv_name= "report.csv"
 
     #get absolute path for csv
     path = os.path.dirname(__file__)
 
-    path = os.path.join(path, OUTPUT_DIR)
+    path = os.path.join(path, OUTPUT_DIR, dir_name)
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -138,7 +141,7 @@ def create_csv(binary, flags, csv_header):
     with open(csv_path,'w+') as csv:
         csv.write(csv_header)
 
-    return csv_path
+    return csv_path, path
 
 
 #takes a list of lines with comma separated values and writes it to the output csv
@@ -201,6 +204,16 @@ def get_data(json_path, binary, compiler, flags, n, m, t, iters):
         os.remove(f)
     return out
 
+# display realtime output of a process and return its exit code when it is finished.
+def get_realtime_output(process):
+    while True:
+        if process.poll() is not None:
+            return process.poll()
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip().decode("utf8"))
 
 
 #compiles all binaries present with provided flags
@@ -214,7 +227,10 @@ def compile_all(compiler, flags):
     args.insert(0,'./compile.sh')
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-    comp.communicate()
+    retcode = get_realtime_output(comp)
+    if retcode != 0:
+        print("Some files could not be compiled or validated!", file=sys.stderr)
+        exit(1)
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
@@ -241,7 +257,7 @@ def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path, variable):
 
 def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, compiler):
     #create a csv
-    csv_path = create_csv(binary, flags, CSV_HEADER)
+    csv_path, dir_path = create_csv(binary, compiler, flags, CSV_HEADER)
     print("CSV Created")
 
 
@@ -270,7 +286,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     print("Find your output in: {0}".format(csv_path))
 
     print(f"Plotting summary...")
-    plot.multiplot_NP_MP_TP_S(csv_path, N_fix, M_fix, T_Fix)
+    plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     
 
 def parse_tuple(arg_name, arg_string, exp):
