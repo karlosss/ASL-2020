@@ -15,6 +15,7 @@ import argparse
 
 plt.rcParams.update(plt.rcParamsDefault)
 plt.style.use('ggplot')
+colormap = 'tab10'
 
 def find_nearest(array, value):
     array = np.asarray(array)
@@ -112,11 +113,14 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
 def plot_series(ax, x, y, label):
     ax.plot(x, y, '-o', label=label)
 
-def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
+def plot_series_color(ax, x, y, label, color):
+    ax.plot(x, y, '-o', label=label, color=color)
+
+def plot_NP_sections(ax, data, M, T, colors, sections=constants.SECTIONS):
     exp = None
-    for section in sections:
+    for i,section in enumerate(sections):
         x, y = extract_NP_data(data, M, T, section)
-        plot_series(ax, x, y, label=section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -131,11 +135,11 @@ def plot_NP_sections(ax, data, M, T, sections=constants.SECTIONS):
     )
 
 
-def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
+def plot_MP_sections(ax, data, N, T, colors, sections=constants.SECTIONS):
     exp = None
-    for section in sections:
+    for i,section in enumerate(sections):
         x, y = extract_MP_data(data, N, T, section)
-        plot_series(ax, x, y, label=section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -150,11 +154,11 @@ def plot_MP_sections(ax, data, N, T, sections=constants.SECTIONS):
     )
 
 
-def plot_TP_sections(ax, data, N, M, sections=constants.SECTIONS):
+def plot_TP_sections(ax, data, N, M, colors,sections=constants.SECTIONS):
     exp = None
-    for section in sections:
+    for i,section in enumerate(sections):
         x, y = extract_TP_data(data, N, M, section)
-        plot_series(ax, x, y, label=section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
         if exp is None:
             exp = is_exponential(x.tolist())
             min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
@@ -265,12 +269,15 @@ def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None, show_plot=F
     ax_table = plt.subplot(2, 3, 4)
     
     sections = get_sections(data)
-    plot_NP_sections(ax_NP, data, M, T, sections)
-    plot_MP_sections(ax_MP, data, N, T, sections)
-    plot_TP_sections(ax_TP, data, N, M, sections)
+    cmap = plt.get_cmap(colormap)
+    colors = cmap(np.linspace(0, 1, len(sections)))
+
+    plot_NP_sections(ax_NP, data, M, T, colors, sections)
+    plot_MP_sections(ax_MP, data, N, T, colors, sections)
+    plot_TP_sections(ax_TP, data, N, M, colors, sections)
     plot_cpu_info_table(ax_table, "CPU Info")
 
-    plot_regions_pie(ax_S, data, "Sections", M, T)
+    plot_regions_pie(ax_S, data, "Sections", M, T, colors)
 
     fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
     fig_dir = save_dir
@@ -294,7 +301,7 @@ def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None, show_plot=F
     print(f"Figure saved to: {fig_save_path}.png")
 
 
-def plot_regions_pie(ax, data, title, M_fix, T_fix):
+def plot_regions_pie(ax, data, title, M_fix, T_fix, colors):
     N_max = data[csv_cols.PARAM_N].max()
 
     region_perf = data[
@@ -306,10 +313,12 @@ def plot_regions_pie(ax, data, title, M_fix, T_fix):
     ]
     ax.set_title(title)
     _, _, autotexts = ax.pie(
-        region_perf[csv_cols.PERFORMANCE]/region_perf[csv_cols.PERFORMANCE].sum(), 
-        labels=region_perf[csv_cols.SECTION], 
+        region_perf[csv_cols.NUM_CYCLES], 
+        labels=region_perf[csv_cols.SECTION],
+        colors = colors[1:,:],
         autopct='%1.1f%%'
     )
+    ax.axis('equal')
     for autotext in autotexts:
         autotext.set_color('white')
 
