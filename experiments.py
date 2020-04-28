@@ -9,6 +9,7 @@ import glob
 import subprocess
 import json
 import plot
+import sys
 from ast import literal_eval as make_tuple
 import python_lib.csv_cols as csv_cols
 from python_lib.constants import OUTPUT_DIR, SECTIONS 
@@ -218,6 +219,9 @@ def compile_all(compiler, flags):
     #call compile.sh
     comp = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     comp.communicate()
+    if comp.returncode != 0:
+        print("Some files could not be compiled or validated!", file=sys.stderr)
+        exit(1)
 
 
 #calls run.sh binary with n, m, iters and t and writes a line with experiment results to file at csv_path
