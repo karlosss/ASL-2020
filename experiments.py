@@ -293,7 +293,7 @@ def parse_tuple(arg_name, arg_string, exp):
     t = make_tuple(arg_string)
     # In case of scalar argument return a tuple representing a 1-number range
     if type(t) == int:
-        if not exp: return (t, t+1, 1, t+1)
+        if not exp: return (t, t+1, 1, t)
         else: return (t, t+1, t)
 
     elif type(t) == tuple:
@@ -381,18 +381,19 @@ if __name__=='__main__':
     # t_min = T_FACTOR * (max(m_max, n_max))
     if args.e:
         T_FACTOR = 2
-        lower_bound = (2 ** (max(m_max, n_max) - 1)) * T_FACTOR
+        lower_bound = (2 ** max(n_fix, m_fix)) * T_FACTOR
         t_min = max(t_min, math.ceil(math.log2(lower_bound)))
         t_max = max(t_min+1, t_max)
-        t_fix = max(t_min, t_fix)
+        lower_bound = (2 ** (max(n_max, m_max) - 1)) * T_FACTOR
+        t_fix = max(t_fix, math.ceil(math.log2(lower_bound)))
         n_fix = 2**n_fix
         m_fix = 2**m_fix
         t_fix = 2**t_fix
         
     else:
-        t_min = max(t_min, T_FACTOR * (max(m_max, n_max) - 1))
+        t_min = max(t_min, T_FACTOR * max(n_fix, m_fix))
         t_max = max(t_min+1, t_max)
-        t_fix = max(t_min, t_fix)
+        t_fix = max(t_fix, T_FACTOR * (max(n_max, m_max) - 1))
     
     # Update T_tuple with adusted parameters.
     if args.e:
