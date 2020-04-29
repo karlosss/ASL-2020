@@ -47,7 +47,7 @@ Example:
 
 ## Comparison Plots
 Run `plot.py` to generate plot comparing the performance measurements already measured from previous runs of `experiments.py`. The options are:
-- `-e EXPERIMENT_DIR`: Compare the performances of all `report.csv` files in the space separated list of experiment directy paths `EXPERIMENT_DIR`.
+- `-e EXPERIMENT_DIR [EXPERIMENT_DIR...]`: Compare the performances of all `report.csv` files in `EXPERIMENT_DIR`s.
 - `-d DIRECTORY`: Compare the performances of all `report.csv` files of the experiment directories inside `DIRECTORY`.
 
 If no arguments are given the folder `./experiments` is used as the directory.
