@@ -125,7 +125,7 @@ def create_csv(binary, compiler, flags, csv_header):
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
     #create name for csv
-    dir_name = str("{0}%{1}_{2}%{3}".format(binary, compiler, flag_string, timestamp))
+    dir_name = str("{0}@{1}_{2}@{3}".format(binary, compiler.split("/")[-1], flag_string, timestamp))
     csv_name= "report.csv"
 
     #get absolute path for csv
