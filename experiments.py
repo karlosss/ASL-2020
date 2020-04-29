@@ -56,8 +56,8 @@ def read_input():
     parser.add_argument(
         "-c","--compiler",
         help=(
-           "The compiler to use, i.e. clang or g++; default is g++."
-           
+           "The compiler to use, i.e. clang or g++; default is g++.\n"
+           "Supports absolute path to the compiler binary as well."           
         ),
         dest="compiler",default="g++"
     )
@@ -146,7 +146,7 @@ def create_csv(binary, compiler, flags, csv_header):
 
 #takes a list of lines with comma separated values and writes it to the output csv
 def append_csv(csv_path, lines, binary, flags, n, m, t, iter, compiler, variable):
-    csv_lines = ['{0},{1},{2},{3},{4},{5},{6},{7},{8}\n'.format(binary, compiler, flags, n, m, t, iter, dat, variable) for dat in lines]
+    csv_lines = ['{0},{1},{2},{3},{4},{5},{6},{7},{8}\n'.format(binary, compiler.split("/")[-1], flags, n, m, t, iter, dat, variable) for dat in lines]
     with open(csv_path,'a') as csv:
         for line in csv_lines:
             csv.write(line)
@@ -252,7 +252,7 @@ def run_experiment(binary, compiler, flags, n, m, iters, t, csv_path, variable):
         data = get_data('logs/papi_hl_output', binary, compiler, flags, n, m, t, iters)
 
         #append the line to csv
-        append_csv(csv_path, data, binary, flags, n, m, t, iters, compiler, variable)
+        append_csv(csv_path, data, binary, flags, n, m, t, iters, compiler.split("/")[-1], variable)
 
 
 def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, compiler):
