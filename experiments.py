@@ -27,6 +27,9 @@ CSV_HEADER=(
     f"{csv_cols.SECTION},"
     f"{csv_cols.NUM_CYCLES},"
     f"{csv_cols.PERFORMANCE},"
+    f"{csv_cols.CACHE_MISS},"
+    f"{csv_cols.CACHE_ACCESS},"
+    f"{csv_cols.MISS_RATE},"
     f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
@@ -185,7 +188,11 @@ def get_data(json_path, binary, compiler, flags, n, m, t, iters):
                     scalar = reg['FP_ARITH:SCALAR_DOUBLE']
                     vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
                     performance = str((int(scalar) + 4*int(vectorized))/int(cycles))
-                    out.append('{0},{1},{2}'.format(name,cycles,performance))
+                    cache_miss = reg['PAPI_L3_TCM']
+                    cache_access = reg['PAPI_L3_TCA']
+                    cache_miss_rate = str(float(cache_miss)/float(cache_access))
+                    out.append('{0},{1},{2},{3},{4},{5}'.format(name,cycles,performance, 
+                        cache_miss, cache_access, cache_miss_rate))
 
                     i=i+1
 
@@ -197,7 +204,11 @@ def get_data(json_path, binary, compiler, flags, n, m, t, iters):
                 cycles = reg['cycles']
                 flops = get_flops_from_binary(binary, compiler, flags, n, m, t, iters)
                 performance=flops/int(cycles)
-                out.append('{0},{1},{2}'.format(name,cycles,performance))
+                cache_miss = reg['PAPI_L3_TCM']
+                cache_access = reg['PAPI_L3_TCA']
+                cache_miss_rate = str(float(cache_miss)/float(cache_access))
+                out.append('{0},{1},{2},{3},{4},{5}'.format(name,cycles,performance, 
+                    cache_miss, cache_access, cache_miss_rate))
 
     files = glob.glob(f"{json_path}/*")
     for f in files:
