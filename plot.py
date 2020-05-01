@@ -134,7 +134,7 @@ def format_plot(ax, xlabel, ylabel, title, is_exp, min_exp=None, max_exp=None):
         ax.set_xscale('log', basex=2)
     else:
         ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
-    ax.set_ylim(ymin=-0.2)
+    ax.set_ylim(ymin=-0.02)
 
 
 def plot_series(ax, x, y, label):
