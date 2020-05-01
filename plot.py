@@ -572,6 +572,7 @@ if __name__ == "__main__":
         N_fix, M_fix, T_fix = get_fixed_variables(data)
         dir_path = os.path.dirname(csv_path)
         multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_fix, False)
+        multiplot_NP_MP_TP_Cache(csv_path, dir_path, N_fix, M_fix, T_fix, False)
         exit(0)
     else:
         if args.directory is not None:
