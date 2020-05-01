@@ -45,14 +45,9 @@ log_dir="$PAPI_OUTPUT_DIRECTORY/papi_hl_output"
 number_of_cores=$(grep -c ^processor /proc/cpuinfo)
 in=""
 
-binary="$1"
+binary_name="$1"
 
-if [[ "$1" = "validate" ]]
-then
-  run_mode="debug"
-else
-  run_mode="execute"
-fi
+run_mode="execute"
 
 shift
 compiler="$1"
@@ -60,7 +55,7 @@ shift
 flags="$*"
 underscored_flags=${flags// /_}
 
-binary="bin/${compiler}_$underscored_flags/$binary"
+binary="bin/${compiler}_$underscored_flags/$binary_name"
 
 if ! [[ -f "$binary" ]]
 then
@@ -69,7 +64,7 @@ fi
 
 read_input
 
-if [[ "$run_mode" = "debug" ]]
+if [[ "$binary_name" = "validate" ]]
 then
     if taskset -c $(( number_of_cores-1 )) "$binary" "$run_mode" <<< "$in" > /dev/null
     then
