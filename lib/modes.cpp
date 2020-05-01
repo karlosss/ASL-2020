@@ -39,14 +39,6 @@ void run_mode(){
 
     baum_welch(PI, A, B, O, FW, BW, C, N, M, T, num_iter);
 
-    free(O);
-    free(PI);
-    free(A);
-    free(B);
-    free(FW);
-    free(BW);
-    free(C);
-
     exit(0);
 }
 

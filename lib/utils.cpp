@@ -4,7 +4,7 @@
 #define EPS (1e-3)
 
 void generate_observation(int** O, size_t len, size_t M) {
-    *O = static_cast<int *>(malloc(len * sizeof(int)));
+    //*O = static_cast<int *>(malloc(len * sizeof(int)));
 
     std::random_device rd;
     std::mt19937 gen{rd()};
@@ -14,8 +14,8 @@ void generate_observation(int** O, size_t len, size_t M) {
         (*O)[i] = dist(gen);
 }
 
-void generate_m(double **M, size_t row, size_t col) {
-    *M = static_cast<double *>(malloc(row * col * sizeof(double)));
+void generate_m(double** M, size_t row, size_t col) {
+    //*M = static_cast<double *>(malloc(row * col * sizeof(double)));
 
     std::random_device rd;
     std::mt19937 gen{rd()};
@@ -35,13 +35,42 @@ void generate_m(double **M, size_t row, size_t col) {
 }
 
 void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double** A, double** B, double** FW, double** BW, double** C){
+    char* arr = (char*) malloc(
+            T*sizeof(int) + // generate_observation(O, T, M);
+            1*N*sizeof(double) + // generate_m(PI, 1, N);
+            N*N*sizeof(double) + // generate_m(A, N, N);
+            N*M*sizeof(double) + // generate_m(B, N, M);
+            N*T*sizeof(double) + // *FW = static_cast<double *>(malloc(N * T * sizeof(double)));
+            N*T*sizeof(double) + // *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
+            T*sizeof(double)     // *C = static_cast<double *>(malloc(T * sizeof(double)));
+    );
+
+    size_t ptr = 0;
+
+    *O = (int*) arr;
+    ptr += T*sizeof(int);
+
+    *PI = (double*) (arr + ptr);
+    ptr += 1*N*sizeof(double);
+
+    *A = (double*) (arr + ptr);
+    ptr += N*N*sizeof(double);
+
+    *B = (double*) (arr + ptr);
+    ptr += N*M*sizeof(double);
+
+    *FW = (double*) (arr + ptr);
+    ptr += N*T*sizeof(double);
+
+    *BW = (double*) (arr + ptr);
+    ptr += N*T*sizeof(double);
+
+    *C = (double*) (arr + ptr);
+
     generate_observation(O, T, M);
     generate_m(PI, 1, N);
     generate_m(A, N, N);
     generate_m(B, N, M);
-    *FW = static_cast<double *>(malloc(N * T * sizeof(double)));
-    *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
-    *C = static_cast<double *>(malloc(T * sizeof(double)));
 }
 
 
