@@ -253,11 +253,11 @@ def plot_TP_sections_cache(ax, data, N, M, colors,sections=constants.SECTIONS):
     )
 
 
-def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
+def multiplot_NP_M_comparison(csv_files,section, N=None, M=None, T=None):
     plt.figure(figsize=(15, 12), facecolor='w')
 
     fig = plt.gcf()
-    fig.suptitle(f"Comparison", fontsize=16)
+    fig.suptitle(f"Comparison of {section}", fontsize=16)
 
     ax_NP = plt.subplot(2, 3, 1)
     ax_MP = plt.subplot(2, 3, 2)
@@ -275,9 +275,9 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
         binary_name, compiler, flags = get_experiment_info(data)
         label = f"{binary_name}, {compiler}, {flags}"
 
-        x_NP, y_NP = extract_NP_data(data, M_fix, T_fix, section="baum_welch")
-        x_MP, y_MP = extract_MP_data(data, N_fix, T_fix, section="baum_welch")
-        x_TP, y_TP = extract_TP_data(data, N_fix, M_fix, section="baum_welch")
+        x_NP, y_NP = extract_NP_data(data, M_fix, T_fix, section=section)
+        x_MP, y_MP = extract_MP_data(data, N_fix, T_fix, section=section)
+        x_TP, y_TP = extract_TP_data(data, N_fix, M_fix, section=section)
 
         plot_series(ax_NP, x_NP, y_NP, label=label)
         plot_series(ax_MP, x_MP, y_MP, label=label)
@@ -331,11 +331,11 @@ def multiplot_NP_M_comparison(csv_files, N=None, M=None, T=None):
     plt.show()
 
 
-def multiplot_NP_M_comparison_cache(csv_files, N=None, M=None, T=None):
+def multiplot_NP_M_comparison_cache(csv_files, section, N=None, M=None, T=None):
     plt.figure(figsize=(15, 12), facecolor='w')
 
     fig = plt.gcf()
-    fig.suptitle(f"Comparison", fontsize=16)
+    fig.suptitle(f"Comparison of {section}", fontsize=16)
 
     ax_NP = plt.subplot(2, 3, 1)
     ax_MP = plt.subplot(2, 3, 2)
@@ -353,9 +353,9 @@ def multiplot_NP_M_comparison_cache(csv_files, N=None, M=None, T=None):
         binary_name, compiler, flags = get_experiment_info(data)
         label = f"{binary_name}, {compiler}, {flags}"
 
-        x_NP, y_NP = extract_NP_data_cache(data, M_fix, T_fix, section="baum_welch")
-        x_MP, y_MP = extract_MP_data_cache(data, N_fix, T_fix, section="baum_welch")
-        x_TP, y_TP = extract_TP_data_cache(data, N_fix, M_fix, section="baum_welch")
+        x_NP, y_NP = extract_NP_data_cache(data, M_fix, T_fix, section=section)
+        x_MP, y_MP = extract_MP_data_cache(data, N_fix, T_fix, section=section)
+        x_TP, y_TP = extract_TP_data_cache(data, N_fix, M_fix, section=section)
 
         plot_series(ax_NP, x_NP, y_NP, label=label)
         plot_series(ax_MP, x_MP, y_MP, label=label)
@@ -555,6 +555,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--experiment_dir', '-e', nargs='+', help='A list of experiment directory paths with data to compare.')
     parser.add_argument('--directory', '-d', help='Directory containing experiment directories with data to compare.')
+    parser.add_argument('--section', help='Code section to compare', default='baum_welch')
     parser.add_argument('--recreate', '-r', help='Path to .csv experiment report file to recreate the plot from.')
     
     args = parser.parse_args()
@@ -586,5 +587,5 @@ if __name__ == "__main__":
                 if filename.endswith(".csv"):
                     csv_files.append(os.path.join(experiment, filename))
 
-    multiplot_NP_M_comparison(csv_files)
-    multiplot_NP_M_comparison_cache(csv_files)
+    multiplot_NP_M_comparison(csv_files, args.section)
+    multiplot_NP_M_comparison_cache(csv_files, args.section)
