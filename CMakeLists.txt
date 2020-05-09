@@ -12,6 +12,12 @@ include_directories(lib)
 add_library(LIBS lib/utils.cpp lib/main.cpp base/base.cpp lib/modes.cpp)
 # ======================================================================================================================
 # For each executable, add the following two lines:
+
+# Manually verify the base algorithm
+add_executable(base_validate base/base_validate.cpp)
+target_link_libraries(base_validate LIBS ${PAPI_LIBRARIES})
+
+# Verify the base algorithm using assertions to check properties
 add_executable(validate base/validate.cpp)
 target_link_libraries(validate LIBS ${PAPI_LIBRARIES})
 
