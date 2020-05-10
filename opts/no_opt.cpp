@@ -2,10 +2,51 @@
 #include "common.h"
 
 size_t flop_count(int N, int M, int T, int n_iter){
-    size_t add = 4*(T-1)*N*N + T*N*M + 2*T*N;
-    size_t mult = 8*(T-1)*N*N + T*N*M + 3*T*N + N;
-    size_t div = (T-1)*N*N + N*N + T*N*M + T*N + N*M + N + T;
-    return n_iter*(add + mult + div);
+    size_t add = 0;
+    size_t mul = 0;
+    size_t div = 0;
+
+    // forward vars
+    mul += N; // FW[i*T + 0] = PI[i]*B[i*M + O[0]];
+    add += N; // scale += FW[i*T + 0];
+
+    div += 1; // C[0] = 1./scale;
+    mul += N; // FW[i*T + 0]*= C[0];
+
+    add += (T-1)*N*N; // FW[i*T + t] += FW[j*T + t-1]*A[j*N + i]*B[i*M + O[t]];
+    mul += 2*(T-1)*N*N;
+    add += N*(T-1); // scale += FW[i*T + t];
+    div += T-1; // C[t] = 1./scale;
+    mul += (T-1)*N; // FW[i*T + t]*= C[t];
+
+    // backward vars
+    add += (T-1)*N*N; // BW[i*T + t] += BW[j*T + t+1]*A[i*N+j]*B[j*M + O[t+1]];
+    mul += 2*(T-1)*N*N;
+    mul += (T-1)*N; // BW[i*T + t]*= C[t];
+
+    // update initial
+    mul += N; // PI[i] = FW[i*T + 0]*BW[i*T+0]/C[0];
+    div += N;
+
+    // update transition
+    add += (T-1)*N*N; // num += FW[i*T + t]*A[i*N + j]*B[j*M + O[t+1]]*BW[j*T + t+1];
+    mul += 3*(T-1)*N*N;
+    add += (T-1)*N*N; // denom += FW[i*T + t]*BW[i*T + t]/C[t];
+    mul += (T-1)*N*N;
+    div += (T-1)*N*N;
+    div += N*N; // A[i*N + j] = num/denom;
+
+    // update emission
+    add += N*M*T; // denom += FW[j*T + t]*BW[j*T + t]/C[t];
+    mul += N*M*T;
+    div += N*M*T;
+
+    add += N*T; // if(O[t] == o) sum_o += FW[j*T + t]*BW[j*T + t]/C[t];
+    mul += N*T;
+    div += N*T;
+
+    div += N*M; // B[j*M + o] = sum_o/denom;
+    return n_iter*(add + mul + div);
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
@@ -91,7 +132,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 double denom = 0.;
                 for(int t = 0; t < T; t++) {
                     denom += FW[j*T + t]*BW[j*T + t]/C[t];
-                    if(O[t] == o) sum_o += FW[j*T + t]*BW[j*T + t]/C[t];;
+                    if(O[t] == o) sum_o += FW[j*T + t]*BW[j*T + t]/C[t];
                 }
                 B[j*M + o] = sum_o/denom;
             }
