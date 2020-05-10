@@ -46,10 +46,6 @@ size_t flop_count(int N, int M, int T, int n_iter){
     div += N*T;
 
     div += N*M; // B[j*M + o] = sum_o/denom;
-
-//    size_t add = 4*(T-1)*N*N + T*N*M + 2*T*N;
-//    size_t mult = 8*(T-1)*N*N + T*N*M + 3*T*N + N;
-//    size_t div = (T-1)*N*N + N*N + T*N*M + T*N + N*M + N + T;
     return n_iter*(add + mul + div);
 }
 
