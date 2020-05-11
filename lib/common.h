@@ -21,6 +21,8 @@ void baum_welch_base(double* PI, double* A, double* B, int* O, double* FW, doubl
 
 size_t flop_count(int N, int M, int T, int n_iter);
 
+void transpose(size_t N, size_t M, double* X);
+
 void handle_error (int retval);
 
 #endif //ASL_PROJECT_COMMON_H
