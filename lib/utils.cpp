@@ -120,6 +120,17 @@ bool compare_outputs(size_t N, size_t M, double* PI, double* A, double* B,
     nrm_sqr_diff(B, B2, N*M) < EPS;
 }
 
+void transpose(size_t N, size_t M, double* X) {
+    double* Y = (double*) malloc(N*M*sizeof(double));
+    memcpy(Y, X, N*M*sizeof(double));
+
+    for(int i = 0; i < N; i++) {
+        for(int j = 0; j < M; j++) {
+            X[j*N+i] = Y[i*M + j];
+        }
+    }
+}
+
 void handle_error (int retval){
     std::cout << "PAPI error " <<  retval << ": " << PAPI_strerror(retval) << std::endl;
     exit(1);
