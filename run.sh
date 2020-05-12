@@ -36,7 +36,7 @@ fi
 
 echo "!!! Make sure you disabled TurboBoost via setup_scripts/turbo_boost.sh disable, I cannot check that for you !!!"
 
-export PAPI_EVENTS="FP_ARITH:SCALAR_DOUBLE,FP_ARITH:256B_PACKED_DOUBLE,PAPI_L3_TCM,API_L3_TCM,PAPI_L3_TCA"
+export PAPI_EVENTS="FP_ARITH:SCALAR_DOUBLE,FP_ARITH:256B_PACKED_DOUBLE,PAPI_L3_TCM,PAPI_L3_TCA"
 export PAPI_OUTPUT_DIRECTORY="$PWD/logs"
 # Uncomment line below to see print output
 #export PAPI_REPORT="1"

@@ -30,6 +30,8 @@ CSV_HEADER=(
     f"{csv_cols.CACHE_MISS},"
     f"{csv_cols.CACHE_ACCESS},"
     f"{csv_cols.MISS_RATE},"
+    f"{csv_cols.NUM_FLOPS},"
+    f"{csv_cols.OP_INTENSITY},"
     f"{csv_cols.VARIABLE}\n"
 )
 T_FACTOR=10
@@ -187,12 +189,14 @@ def get_data(json_path, binary, compiler, flags, n, m, t, iters):
                     cycles = reg['cycles']  
                     scalar = reg['FP_ARITH:SCALAR_DOUBLE']
                     vectorized = reg['FP_ARITH:256B_PACKED_DOUBLE']
-                    performance = str((int(scalar) + 4*int(vectorized))/int(cycles))
+                    flops = str(int(scalar) + 4*int(vectorized))
+                    performance = str(int(flops)/int(cycles))
                     cache_miss = reg['PAPI_L3_TCM']
+                    op_intensity = int(flops)/(64*float(cache_miss))
                     cache_access = reg['PAPI_L3_TCA']
                     cache_miss_rate = str(float(cache_miss)/float(cache_access))
-                    out.append('{0},{1},{2},{3},{4},{5}'.format(name,cycles,performance, 
-                        cache_miss, cache_access, cache_miss_rate))
+                    out.append('{0},{1},{2},{3},{4},{5},{6},{7}'.format(name,cycles,performance, 
+                        cache_miss, cache_access, cache_miss_rate,flops,op_intensity))
 
                     i=i+1
 
@@ -299,6 +303,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     print(f"Plotting summary...")
     plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     plot.multiplot_NP_MP_TP_Cache(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
+    plot.plot_roofline(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     
 
 def parse_tuple(arg_name, arg_string, exp):

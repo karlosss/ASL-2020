@@ -6,8 +6,9 @@ TURBO_BOOST = "Disabled"
 L1_CACHE = "128 KiB"
 L2_CACHE = "1 MiB"
 L3_CACHE = "6 MiB"
-WRITE_BANDWIDTH = "TODO"
-READ_BANDWIDTH = "TODO"
+PI_SCALAR = "4"
+PI_VEC = "16"
+MEM_BANDWIDTH = "13"
 
 info_list = [
     CPU_NAME,
@@ -18,6 +19,7 @@ info_list = [
     L1_CACHE,
     L2_CACHE,
     L3_CACHE,
-    # WRITE_BANDWIDTH,
-    # READ_BANDWIDTH
+    PI_SCALAR,
+    PI_VEC,
+    MEM_BANDWIDTH,
 ]
