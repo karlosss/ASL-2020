@@ -41,6 +41,15 @@ def extract_NP_data(data, M, T, section):
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
 
+def extract_NP_data_roofline(data, M, T, section):
+    f =  data[
+          (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 0)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_N],f[csv_cols.OP_INTENSITY], f[csv_cols.PERFORMANCE]
+
 def extract_NP_data_cache(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
@@ -59,6 +68,15 @@ def extract_MP_data(data, N, T, section):
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
+
+def extract_MP_data_roofline(data, N, T, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 1)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_M],f[csv_cols.OP_INTENSITY], f[csv_cols.PERFORMANCE]
 
 def extract_MP_data_cache(data, N, T, section):
     f =  data[
@@ -87,6 +105,15 @@ def extract_TP_data_cache(data, N, M, section):
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_T], f[csv_cols.MISS_RATE]
+
+def extract_TP_data_roofline(data, N, M, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.VARIABLE] == 2)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_T], f[csv_cols.OP_INTENSITY], f[csv_cols.MISS_RATE]
 
 
 def adjust_param(data, param, value):
@@ -160,6 +187,157 @@ def plot_NP_sections(ax, data, M, T, colors, sections=constants.SECTIONS):
         min_exp=min_exp, 
         max_exp=max_exp
     )
+
+def plot_NP_roofline(ax, data, M, T, section):
+    N, x, y = extract_NP_data_roofline(data, M, T, section)
+
+    # scalar max performance
+    pi_s = int(cpu_info.info_list[-3])
+    # vector max performance
+    pi_v = int(cpu_info.info_list[-2])
+
+    bandwidth = float(cpu_info.info_list[-1])
+
+    xmin = 1/64
+    xmax = 2*np.max(x)
+    ymin = 1/4*np.min(y)
+    ymax = bandwidth*xmax
+
+    fill0 = np.linspace(xmin,pi_s/bandwidth)
+    fill1 = np.linspace(pi_s/bandwidth, pi_v/bandwidth)
+    fill2 = np.linspace(pi_s/bandwidth, xmax)
+    fill3 = np.linspace(pi_v/bandwidth, xmax)
+
+    
+    op_intensity = np.linspace(xmin, xmax, num=100)
+    perf = bandwidth*op_intensity
+    ax.plot(op_intensity, perf, 'k', linewidth=3.0)
+
+    ax.text(32*xmin, 2*pi_v, f"β ({bandwidth} bytes/cycle)")
+    ax.hlines(pi_s, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_s+1/4, f'Peak π seq. ({pi_s} flops/cycle)')
+    ax.hlines(pi_v, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_v+1, f'Peak π vec. ({pi_v} flops/cycle)')
+    ax.vlines(pi_s/bandwidth, ymin, pi_s, linestyles='dotted')
+    ax.vlines(pi_v/bandwidth, ymin, pi_v, linestyles='dotted')
+    ax.fill_between(fill0, bandwidth*fill0, color='C1', alpha=0.2)
+    ax.fill_between(fill1, bandwidth*fill1, color='C1', alpha=0.2)
+    ax.fill_between(fill2, ymin, pi_s, color='C0', alpha=0.1)
+    ax.fill_between(fill3, pi_s, pi_v, color='C0', alpha=0.1)
+
+    
+    for i, txt in enumerate(N):
+        ax.scatter(x.iloc[i],y.iloc[i])
+        ax.annotate(txt, (x.iloc[i], y.iloc[i]))
+    
+    ax.set_title(f"M = {M}, T = {T}")
+    ax.set_xlabel("Op Intensity [bytes/cycle]")
+    ax.set_ylabel("Perf [flops/cycle]", rotation=0)
+    ax.yaxis.set_label_coords(0.07,1)
+    ax.set_xscale('log', basex=2)
+    ax.set_yscale('log', basey=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+def plot_MP_roofline(ax, data, N, T, section):
+    M, x, y = extract_MP_data_roofline(data, N, T, section)
+
+    # scalar max performance
+    pi_s = int(cpu_info.info_list[-3])
+    # vector max performance
+    pi_v = int(cpu_info.info_list[-2])
+
+    bandwidth = float(cpu_info.info_list[-1])
+
+    xmin = 1/64
+    xmax = 2*np.max(x)
+    ymin = 1/4*np.min(y)
+    ymax = bandwidth*xmax
+
+    fill0 = np.linspace(xmin,pi_s/bandwidth)
+    fill1 = np.linspace(pi_s/bandwidth, pi_v/bandwidth)
+    fill2 = np.linspace(pi_s/bandwidth, xmax)
+    fill3 = np.linspace(pi_v/bandwidth, xmax)
+
+    
+    op_intensity = np.linspace(xmin, xmax, num=100)
+    perf = bandwidth*op_intensity
+    ax.plot(op_intensity, perf, 'k', linewidth=3.0)
+
+    ax.text(32*xmin, 2*pi_v, f"β ({bandwidth} bytes/cycle)")
+    ax.hlines(pi_s, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_s+1/4, f'Peak π seq. ({pi_s} flops/cycle)')
+    ax.hlines(pi_v, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_v+1, f'Peak π vec. ({pi_v} flops/cycle)')
+    ax.vlines(pi_s/bandwidth, ymin, pi_s, linestyles='dotted')
+    ax.vlines(pi_v/bandwidth, ymin, pi_v, linestyles='dotted')
+    ax.fill_between(fill0, bandwidth*fill0, color='C1', alpha=0.2)
+    ax.fill_between(fill1, bandwidth*fill1, color='C1', alpha=0.2)
+    ax.fill_between(fill2, ymin, pi_s, color='C0', alpha=0.1)
+    ax.fill_between(fill3, pi_s, pi_v, color='C0', alpha=0.1)
+
+    for i, txt in enumerate(M):
+        ax.scatter(x.iloc[i],y.iloc[i])
+        ax.annotate(txt, (x.iloc[i], y.iloc[i]))
+    
+    ax.set_title(f"N = {N}, T = {T}")
+    ax.set_xlabel("Op Intensity [bytes/cycle]")
+    ax.set_ylabel("Perf [flops/cycle]", rotation=0)
+    ax.yaxis.set_label_coords(0.07,1)
+    ax.set_xscale('log', basex=2)
+    ax.set_yscale('log', basey=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, ymax)
+
+
+def plot_TP_roofline(ax, data, N, M, section):
+    T, x, y = extract_TP_data_roofline(data, N, M, section)
+
+    # scalar max performance
+    pi_s = int(cpu_info.info_list[-3])
+    # vector max performance
+    pi_v = int(cpu_info.info_list[-2])
+
+    bandwidth = float(cpu_info.info_list[-1])
+
+    xmin = 1/64
+    xmax = 2*np.max(x)
+    ymin = 1/2*np.min(y)
+    ymax = bandwidth*xmax
+
+    fill0 = np.linspace(xmin,pi_s/bandwidth)
+    fill1 = np.linspace(pi_s/bandwidth, pi_v/bandwidth)
+    fill2 = np.linspace(pi_s/bandwidth, xmax)
+    fill3 = np.linspace(pi_v/bandwidth, xmax)
+
+    op_intensity = np.linspace(xmin, xmax, num=100)
+    perf = bandwidth*op_intensity
+    ax.plot(op_intensity, perf, 'k', linewidth=3.0)
+
+    ax.text(32*xmin, 2*pi_v, f"β ({bandwidth} bytes/cycle)")
+    ax.hlines(pi_s, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_s+1/4, f'Peak π seq. ({pi_s} flops/cycle)')
+    ax.hlines(pi_v, xmin, xmax, linewidth=3.0)
+    ax.text(1.2*xmin, pi_v+1, f'Peak π vec. ({pi_v} flops/cycle)')
+    ax.vlines(pi_s/bandwidth, ymin, pi_s, linestyles='dotted')
+    ax.vlines(pi_v/bandwidth, ymin, pi_v, linestyles='dotted')
+    ax.fill_between(fill0, bandwidth*fill0, color='C1', alpha=0.2)
+    ax.fill_between(fill1, bandwidth*fill1, color='C1', alpha=0.2)
+    ax.fill_between(fill2, ymin, pi_s, color='C0', alpha=0.1)
+    ax.fill_between(fill3, pi_s, pi_v, color='C0', alpha=0.1)
+
+    for i, txt in enumerate(T):
+        ax.scatter(x.iloc[i],y.iloc[i])
+        ax.annotate(txt, (x.iloc[i], y.iloc[i]))
+    
+    ax.set_title(f"N = {N}, M = {M}")
+    ax.set_xlabel("Op Intensity [bytes/cycle]")
+    ax.set_ylabel("Perf [flops/cycle]", rotation=0)
+    ax.yaxis.set_label_coords(0.07,1)
+    ax.set_xscale('log', basex=2)
+    ax.set_yscale('log', basey=2)
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(ymin, xmax)
 
 def plot_NP_sections_cache(ax, data, M, T, colors, sections=constants.SECTIONS):
     exp = None
@@ -408,6 +586,43 @@ def multiplot_NP_M_comparison_cache(csv_files, section, N=None, M=None, T=None):
     )
     plt.show()
 
+def plot_roofline(csv_file, save_dir, N=None, M=None, T=None, show_plot=False, section='baum_welch'): 
+    data = pd.read_csv(csv_file)
+    if N is None or M is None or T is None:
+        N, M, T = get_fixed_variables(csv_file)
+
+    plt.figure(figsize=(20, 15), facecolor='w')
+    binary_name,compiler, flags = get_experiment_info(data)
+
+    fig = plt.gcf()
+    fig.suptitle(f"Binary: {binary_name}, Compiler: {compiler}, Flags: {flags}", fontsize=16)
+
+    ax_NP = plt.subplot(2, 2, 1)
+    ax_MP = plt.subplot(2, 2, 2)
+    ax_TP = plt.subplot(2, 2, 3)
+    ax_table = plt.subplot(2, 2, 4)
+
+    plot_NP_roofline(ax_NP, data, M, T, section)
+    plot_MP_roofline(ax_MP, data, N, T, section)
+    plot_TP_roofline(ax_TP, data, N, M, section)
+    plot_cpu_info_table(ax_table, "CPU Info")
+
+    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    fig_dir = save_dir
+    if not os.path.exists(fig_dir):
+        os.makedirs(fig_dir)
+    fig_name = "roofline"
+    fig_save_path = os.path.join(fig_dir, fig_name)
+    fig = plt.gcf()
+
+    plt.savefig(fig_save_path)
+    if(show_plot):
+        plt.show()
+    print(f"Figure saved to: {fig_save_path}.png")
+    
+
+
+
 def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None, show_plot=False):
     data = pd.read_csv(csv_file)
     N = adjust_param(data, csv_cols.PARAM_N, N)
@@ -536,7 +751,7 @@ def plot_cpu_info_table(ax, title):
         "L2 cache:",
         "L3 cache:"
     ]
-    data = [[item] for item in cpu_info.info_list]
+    data = [[item] for item in cpu_info.info_list[:-3]]
     table = ax.table(
         cellText=data ,
         rowLabels=row_labels,
@@ -574,6 +789,7 @@ if __name__ == "__main__":
         dir_path = os.path.dirname(csv_path)
         multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_fix, False)
         multiplot_NP_MP_TP_Cache(csv_path, dir_path, N_fix, M_fix, T_fix, False)
+        plot_roofline(csv_path, dir_path, N_fix, M_fix, T_fix, section=args.section)
         exit(0)
     else:
         if args.directory is not None:
