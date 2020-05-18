@@ -41,6 +41,15 @@ def extract_NP_data(data, M, T, section):
     ]
     return f[csv_cols.PARAM_N], f[csv_cols.PERFORMANCE]
 
+def extract_NP_data_runtime(data, M, T, section):
+    f =  data[
+          (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 0)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_N], f[csv_cols.NUM_CYCLES]
+
 def extract_NP_data_roofline(data, M, T, section):
     f =  data[
           (data[csv_cols.PARAM_M] == M)
@@ -69,6 +78,15 @@ def extract_MP_data(data, N, T, section):
     ]
     return f[csv_cols.PARAM_M], f[csv_cols.PERFORMANCE]
 
+def extract_MP_data_runtime(data, N, T, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_T] == T)
+        & (data[csv_cols.VARIABLE] == 1)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_M], f[csv_cols.NUM_CYCLES]
+
 def extract_MP_data_roofline(data, N, T, section):
     f =  data[
           (data[csv_cols.PARAM_N] == N)
@@ -96,6 +114,15 @@ def extract_TP_data(data, N, M, section):
         & (data[csv_cols.SECTION] == section)
     ]
     return f[csv_cols.PARAM_T], f[csv_cols.PERFORMANCE]
+
+def extract_TP_data_runtime(data, N, M, section):
+    f =  data[
+          (data[csv_cols.PARAM_N] == N)
+        & (data[csv_cols.PARAM_M] == M)
+        & (data[csv_cols.VARIABLE] == 2)
+        & (data[csv_cols.SECTION] == section)
+    ]
+    return f[csv_cols.PARAM_T], f[csv_cols.NUM_CYCLES]
 
 def extract_TP_data_cache(data, N, M, section):
     f =  data[
@@ -182,6 +209,24 @@ def plot_NP_sections(ax, data, M, T, colors, sections=constants.SECTIONS):
     format_plot(ax, 
         xlabel=csv_cols.PARAM_N,
         ylabel=f"Perf [F/C]",
+        title=f"M = {M}, T = {T}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
+    )
+
+def plot_NP_runtime(ax, data, M, T, colors, sections=constants.SECTIONS):
+    exp = None
+    for i,section in enumerate(sections):
+        x, y = extract_NP_data_runtime(data, M, T, section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
+
+    format_plot(ax, 
+        xlabel=csv_cols.PARAM_N,
+        ylabel=f"Run",
         title=f"M = {M}, T = {T}",
         is_exp=exp, 
         min_exp=min_exp, 
@@ -376,6 +421,24 @@ def plot_MP_sections(ax, data, N, T, colors, sections=constants.SECTIONS):
         max_exp=max_exp
     )
 
+def plot_MP_runtime(ax, data, N, T, colors, sections=constants.SECTIONS):
+    exp = None
+    for i,section in enumerate(sections):
+        x, y = extract_MP_data_runtime(data, N, T, section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
+
+    format_plot(ax, 
+        xlabel=csv_cols.PARAM_M,
+        ylabel=f"Run",
+        title=f"N = {N}, T = {T}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
+    )
+
 def plot_MP_sections_cache(ax, data, N, T, colors, sections=constants.SECTIONS):
     exp = None
     for i,section in enumerate(sections):
@@ -406,6 +469,24 @@ def plot_TP_sections(ax, data, N, M, colors,sections=constants.SECTIONS):
     format_plot(ax, 
         xlabel=csv_cols.PARAM_T,
         ylabel=f"Perf [F/C]",
+        title=f"N = {N}, M = {M}",
+        is_exp=exp, 
+        min_exp=min_exp, 
+        max_exp=max_exp
+    )
+
+def plot_TP_runtime(ax, data, N, M, colors,sections=constants.SECTIONS):
+    exp = None
+    for i,section in enumerate(sections):
+        x, y = extract_TP_data_runtime(data, N, M, section)
+        plot_series_color(ax, x, y, label=section, color=colors[i])
+        if exp is None:
+            exp = is_exponential(x.tolist())
+            min_exp, max_exp = int(math.log2(x.min())), int(math.log2(x.max()))
+
+    format_plot(ax, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Run",
         title=f"N = {N}, M = {M}",
         is_exp=exp, 
         min_exp=min_exp, 
@@ -621,6 +702,54 @@ def plot_roofline(csv_file, save_dir, N=None, M=None, T=None, show_plot=False, s
     print(f"Figure saved to: {fig_save_path}.png")
     
 
+def multiplot_runtime(csv_file, save_dir, N=None, M=None, T=None, show_plot=False):
+    data = pd.read_csv(csv_file)
+    N = adjust_param(data, csv_cols.PARAM_N, N)
+    M = adjust_param(data, csv_cols.PARAM_M, M)
+    T = adjust_param(data, csv_cols.PARAM_T, T)
+    plt.figure(figsize=(15, 12), facecolor='w')
+    binary_name,compiler, flags = get_experiment_info(data)
+
+    fig = plt.gcf()
+    fig.suptitle(f"Binary: {binary_name}, Compiler: {compiler}, Flags: {flags}", fontsize=16)
+
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+    ax_S  = plt.subplot(2, 3, 5)
+    ax_table = plt.subplot(2, 3, 4)
+    
+    sections = get_sections(data)
+    cmap = plt.get_cmap(colormap)
+    colors = cmap(np.linspace(0, 1, len(sections)))
+
+    plot_NP_runtime(ax_NP, data, M, T, colors, sections)
+    plot_MP_runtime(ax_MP, data, N, T, colors, sections)
+    plot_TP_runtime(ax_TP, data, N, M, colors, sections)
+    plot_cpu_info_table(ax_table, "CPU Info")
+
+    plot_regions_pie(ax_S, data, "Sections", M, T, colors)
+
+    fig.tight_layout(pad=3.0, rect=[0, 0.0, 1, 0.95])
+    fig_dir = save_dir
+    if not os.path.exists(fig_dir):
+        os.makedirs(fig_dir)
+    fig_name = "runtime"
+    fig_save_path = os.path.join(fig_dir, fig_name)
+    fig = plt.gcf()
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
+
+    plt.savefig(fig_save_path)
+    if(show_plot):
+        plt.show()
+    print(f"Figure saved to: {fig_save_path}.png")
 
 
 def multiplot_NP_MP_TP_S(csv_file, save_dir, N=None, M=None, T=None, show_plot=False):
