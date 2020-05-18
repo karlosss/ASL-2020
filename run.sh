@@ -34,7 +34,9 @@ then
     $(sudo sh -c "echo 0 >/proc/sys/kernel/perf_event_paranoid")
 fi
 
-echo "!!! Make sure you disabled TurboBoost via setup_scripts/turbo_boost.sh disable, I cannot check that for you !!!"
+echo "I need to ensure disabled turbo boost, please give me sudo access:"
+sudo setup_scripts/turbo_boost.sh disable
+sudo setup_scripts/redirect_irq.sh
 
 export PAPI_EVENTS="FP_ARITH:SCALAR_DOUBLE,FP_ARITH:256B_PACKED_DOUBLE,PAPI_L3_TCM,PAPI_L3_TCA"
 export PAPI_OUTPUT_DIRECTORY="$PWD/logs"
