@@ -304,6 +304,7 @@ def main(binary, N_iter, M_iter, T_iter, iters, N_fix, M_fix, T_Fix, flags, comp
     plot.multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     plot.multiplot_NP_MP_TP_Cache(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     plot.plot_roofline(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
+    plot.multiplot_runtime(csv_path, dir_path, N_fix, M_fix, T_Fix, args.p)
     
 
 def parse_tuple(arg_name, arg_string, exp):
