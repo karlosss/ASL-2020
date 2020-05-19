@@ -55,8 +55,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
     double* denoms = sum_os + M*N;
     init_zero(sum_os, M*N);
 
-    transpose(N,M,B);
-
     REGION_BEGIN(baum_welch)
 
     for(int it = 0; it < n_iter; it++) {
@@ -268,6 +266,4 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
     }
 
     REGION_END(baum_welch)
-
-    transpose(M,N,B);
 }
