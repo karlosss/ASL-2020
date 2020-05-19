@@ -23,3 +23,6 @@ target_link_libraries(validate LIBS ${PAPI_LIBRARIES})
 
 add_executable(no_opt opts/no_opt.cpp)
 target_link_libraries(no_opt LIBS ${PAPI_LIBRARIES})
+
+add_executable(opt1 opts/opt1.cpp)
+target_link_libraries(opt1 LIBS ${PAPI_LIBRARIES})

@@ -42,7 +42,10 @@ void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double**
             N*M*sizeof(double) + // generate_m(B, N, M);
             N*T*sizeof(double) + // *FW = static_cast<double *>(malloc(N * T * sizeof(double)));
             N*T*sizeof(double) + // *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
-            T*sizeof(double)     // *C = static_cast<double *>(malloc(T * sizeof(double)));
+            T*sizeof(double) +     // *C = static_cast<double *>(malloc(T * sizeof(double)));
+            T*sizeof(double) +  // scales (size T)
+            N*T*sizeof(double) // denom (size N*T)
+
     );
 
     size_t ptr = 0;
