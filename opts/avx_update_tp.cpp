@@ -186,7 +186,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         for(int i = 0; i < N; i++) {
 
-            double pi = FW[i*T] * BW[i*T] * scales0;
+            double pi = FW[i] * BW[i] * scales0;
 
             sum_os[i*M + o0] = pi;
             PI[i] = pi;
@@ -197,25 +197,25 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             double denom3 = 0;
 
             for(int t = 1; t < T-3; t+=4) {
-                double toadd0 = FW[i*T + t] * BW[i*T + t] * scales[t];
-                double toadd1 = FW[i*T + t+1] * BW[i*T + t+1] * scales[t+1];
-                double toadd2 = FW[i*T + t+2] * BW[i*T + t+2] * scales[t+2];
-                double toadd3 = FW[i*T + t+3] * BW[i*T + t+3] * scales[t+3];
+                double toadd0 = FW[i + (t  )*N] * BW[i + (t  )*N] * scales[t];
+                double toadd1 = FW[i + (t+1)*N] * BW[i + (t+1)*N] * scales[t+1];
+                double toadd2 = FW[i + (t+2)*N] * BW[i + (t+2)*N] * scales[t+2];
+                double toadd3 = FW[i + (t+3)*N] * BW[i + (t+3)*N] * scales[t+3];
 
                 denom0 += toadd0;
                 denom1 += toadd1;
                 denom2 += toadd2;
                 denom3 += toadd3;
 
-                sum_os[i*M + O[t]] += toadd0;
+                sum_os[i*M + O[t  ]] += toadd0;
                 sum_os[i*M + O[t+1]] += toadd1;
                 sum_os[i*M + O[t+2]] += toadd2;
                 sum_os[i*M + O[t+3]] += toadd3;
             }
 
             // leftover 2 iterations
-            double toadd0 = FW[i*T + T-3] * BW[i*T + T-3] * scales[T-3];
-            double toadd1 = FW[i*T + T-2] * BW[i*T + T-2] * scales[T-2];
+            double toadd0 = FW[i + (T-3)*N] * BW[i + (T-3)*N] * scales[T-3];
+            double toadd1 = FW[i + (T-2)*N] * BW[i + (T-2)*N] * scales[T-2];
 
             denom0 += toadd0;
             denom1 += toadd1;
@@ -225,7 +225,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
             double denom = denom0+denom1+denom2+denom3+pi;
 
-            double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scalest1;
+            double lastadd = FW[i + (T-1)*N] * BW[i + (T-1)*N] * scalest1;
             denoms[i] = denom + lastadd;
             sum_os[i*M + ot1] += lastadd;
 
@@ -236,15 +236,15 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 double num3 = 0.;
 
                 for(int t = 0; t < T-4; t+=4) {
-                    num0 += FW[i*T + t] * B[j*M + O[t+1]] * BW[j*T + t+1];
-                    num1 += FW[i*T + t+1] * B[j*M + O[t+2]] * BW[j*T + t+2];
-                    num2 += FW[i*T + t+2] * B[j*M + O[t+3]] * BW[j*T + t+3];
-                    num3 += FW[i*T + t+3] * B[j*M + O[t+4]] * BW[j*T + t+4];
+                    num0 += FW[i + (t  )*N] * B[j + O[t+1]*N] * BW[j + (t+1)*N];
+                    num1 += FW[i + (t+1)*N] * B[j + O[t+2]*N] * BW[j + (t+2)*N];
+                    num2 += FW[i + (t+2)*N] * B[j + O[t+3]*N] * BW[j + (t+3)*N];
+                    num3 += FW[i + (t+3)*N] * B[j + O[t+4]*N] * BW[j + (t+4)*N];
                 }
 
-                num0 += FW[i*T + T-4] * B[j*M + ot3] * BW[j*T + T-3];
-                num1 += FW[i*T + T-3] * B[j*M + ot2] * BW[j*T + T-2];
-                num2 += FW[i*T + T-2] * B[j*M + ot1] * BW[j*T + T-1];
+                num0 += FW[i + (T-4)*N] * B[j + ot3*N] * BW[j + (T-3)*N];
+                num1 += FW[i + (T-3)*N] * B[j + ot2*N] * BW[j + (T-2)*N];
+                num2 += FW[i + (T-2)*N] * B[j + ot1*N] * BW[j + (T-1)*N];
 
                 double num = (num0+num1+num2+num3)*A[i*N + j];
                 A[i*N + j] = num/denom;
@@ -257,10 +257,10 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         for(int i = 0; i < N; i++) {
             double denomsi = denoms[i];
             for(int o = 0; o < M; o += 4){
-                B[i*M + o] = sum_os[i*M + o]/denomsi;
-                B[i*M + o+1] = sum_os[i*M + o+1]/denomsi;
-                B[i*M + o+2] = sum_os[i*M + o+2]/denomsi;
-                B[i*M + o+3] = sum_os[i*M + o+3]/denomsi;
+                B[i + (o  )*N] = sum_os[i*M + o  ]/denomsi;
+                B[i + (o+1)*N] = sum_os[i*M + o+1]/denomsi;
+                B[i + (o+2)*N] = sum_os[i*M + o+2]/denomsi;
+                B[i + (o+3)*N] = sum_os[i*M + o+3]/denomsi;
 
                 sum_os[i*M + o] = 0;
                 sum_os[i*M + o+1] = 0;
