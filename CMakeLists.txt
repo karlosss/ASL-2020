@@ -35,3 +35,9 @@ target_link_libraries(opt2 LIBS ${PAPI_LIBRARIES})
 
 add_executable(opt1_unrolled opts/opt1_unrolled.cpp)
 target_link_libraries(opt1_unrolled LIBS ${PAPI_LIBRARIES})
+
+add_executable(avx_update_no_tp opts/avx_update_no_tp.cpp)
+target_link_libraries(avx_update_no_tp LIBS ${PAPI_LIBRARIES})
+
+add_executable(avx_update_tp opts/avx_update_tp.cpp)
+target_link_libraries(avx_update_tp LIBS ${PAPI_LIBRARIES})
