@@ -219,14 +219,22 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             denoms[i] = denom + lastadd;
             sum_os[i*M + ot1] += lastadd;
 
-            double* nums = (double*) malloc(T*sizeof(double));
-            for(int j = 0; j < N; j++) {
-                double num = 0.0;
+            for(int j = 0; j < N; j += 4) {
+                double num0 = 0.0;
+                double num1 = 0.0;
+                double num2 = 0.0;
+                double num3 = 0.0;
 
                 for(int t = 0; t < T-1; t+=1) {
-                    num += FW[i + (t  )*N] * B[j + O[t+1]*N] * BW[j + (t+1)*N];
+                    num0 += FW[i + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    num1 += FW[i + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    num2 += FW[i + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    num3 += FW[i + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
                 }
-                A[i*N + j] = num*A[i*N + j]/denom;
+                A[i*N + (j+0)] = num0*A[i*N + (j+0)]/denom;
+                A[i*N + (j+1)] = num1*A[i*N + (j+1)]/denom;
+                A[i*N + (j+2)] = num2*A[i*N + (j+2)]/denom;
+                A[i*N + (j+3)] = num3*A[i*N + (j+3)]/denom;
             }
         }
         REGION_END(update_transition)
