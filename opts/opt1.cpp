@@ -138,11 +138,13 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         for(int i = 0; i < N; i++) {
 
-            PI[i] = FW[i*T] * BW[i*T] * scales0;
+            double pi = FW[i*T] * BW[i*T] * scales0;
 
-            double denom = 0.;
+            double denom = pi;
+            sum_os[i*M + o0] = pi;
+            PI[i] = pi;
 
-            for(int t = 0; t < T-1; t++) {
+            for(int t = 1; t < T-1; t++) {
                 double toadd = FW[i*T + t] * BW[i*T + t] * scales[t];
                 denom += toadd;
                 sum_os[i*M + O[t]] += toadd;
