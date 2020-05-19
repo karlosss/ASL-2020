@@ -181,8 +181,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         double scalest1 = scales[T-1];
         int ot1 = O[T-1];
-        int ot2 = O[T-2];
-        int ot3 = O[T-3];
 
         for(int i = 0; i < N; i++) {
 
@@ -191,29 +189,13 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             sum_os[i*M + o0] = pi;
             PI[i] = pi;
 
-            double denom0 = 0;
-            double denom1 = 0;
-            double denom2 = 0;
-            double denom3 = 0;
-
-            for(int t = 1; t < T-3; t+=1) {
-                double toadd0 = FW[i + (t  )*N] * BW[i + (t  )*N] * scales[t];
-                denom0 += toadd0;
-                sum_os[i*M + O[t  ]] += toadd0;
-
+            double denom = 0.0;
+            for(int t = 1; t < T-1; t+=1) {
+                double toadd = FW[i + t*N] * BW[i + t*N] * scales[t];
+                denom += toadd;
+                sum_os[i*M + O[t]] += toadd;
             }
-
-            // leftover 2 iterations
-            double toadd0 = FW[i + (T-3)*N] * BW[i + (T-3)*N] * scales[T-3];
-            double toadd1 = FW[i + (T-2)*N] * BW[i + (T-2)*N] * scales[T-2];
-
-            denom0 += toadd0;
-            denom1 += toadd1;
-
-            sum_os[i*M + ot3] += toadd0;
-            sum_os[i*M + ot2] += toadd1;
-
-            double denom = denom0+denom1+denom2+denom3+pi;
+            denom += pi;
 
             double lastadd = FW[i + (T-1)*N] * BW[i + (T-1)*N] * scalest1;
             denoms[i] = denom + lastadd;
