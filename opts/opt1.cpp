@@ -168,8 +168,9 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
         for(int i = 0; i < N; i++) {
+            double denomsi = denoms[i];
             for(int o = 0; o < M; ++o){
-                B[i*M + o] = sum_os[i*M + o]/denoms[i];
+                B[i*M + o] = sum_os[i*M + o]/denomsi;
                 sum_os[i*M + o] = 0;
             }
         }
