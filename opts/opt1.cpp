@@ -163,11 +163,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             double denom = 0.;
 
             for(int t = 0; t < T; t++) {
-                double fwjtt = FW[j*T + t];
-                double bwjtt = BW[j*T + t];
-                double scalest = scales[t];
-
-                double toadd = fwjtt * bwjtt * scalest;
+                double toadd = FW[j*T + t] * BW[j*T + t] * scales[t];
 
                 denom += toadd;
                 sum_os[O[t]] += toadd;
