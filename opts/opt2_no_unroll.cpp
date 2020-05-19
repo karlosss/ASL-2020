@@ -50,9 +50,7 @@ size_t flop_count(int N, int M, int T, int n_iter){
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
-    double* scales = C + T;
-    double* sum_os = scales + T;
-    init_zero(sum_os, M);
+    double* scales = (double*) malloc(T*sizeof(double));
 
     REGION_BEGIN(baum_welch)
 
@@ -60,46 +58,35 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         // Calculate the Forward trellis (scaled)
         REGION_BEGIN(forward_vars)
-
         double scale = 0.;
-        int o0 = O[0];
         for(int i = 0; i < N; i++) {
-            double fwit = PI[i]*B[i*M + o0];
-            FW[i*T] = fwit;
-            scale += fwit;
+            FW[i*T + 0] = PI[i]*B[i*M + O[0]];
+            scale += FW[i*T + 0];
         }
-
-        double c0 = 1./scale;
-        C[0] = c0;
-        double scales0 = scale;
+        // Scale timestep 0
+        C[0] = 1./scale;
         scales[0] = scale;
-
         for(int i = 0; i < N; i++) {
-            FW[i*T] *= c0;
+            FW[i*T + 0]*= C[0];
         }
 
         for(int t = 1; t < T; t++) {
             scale = 0.;
-            int ot = O[t];
+            int obs = O[t];
             for(int i = 0; i < N; i++) {
-                double fwitt = 0.;
-                double bimot = B[i*M + ot];
+                double accum0 = 0.;
 
                 for(int j = 0; j < N; j++) {
-                    fwitt += FW[j*T + t-1]*A[j*N + i];
+                    accum0 += FW[j*T + t-1]*A[j*N + i];
                 }
-                fwitt *= bimot;
-
-                FW[i*T + t] = fwitt;
-                scale += fwitt;
+                FW[i*T + t] = B[i*M + obs]*accum0;
+                scale += FW[i*T + t];
             }
-
-            double ct = 1./scale;
-            C[t] = ct;
+            C[t] = 1./scale;
             scales[t] = scale;
 
             for(int i = 0; i < N; i++) {
-                FW[i*T + t] *= ct;
+                FW[i*T + t]*= C[t];
             }
         }
 
@@ -107,75 +94,65 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         REGION_BEGIN(backward_vars)
         // Calculate the Backward trellis (scaled)
-        double ct1 = C[T-1];
+        double bw_c_t_1 = C[T-1];
         for(int i = 0; i < N; i++) {
-            BW[i*T + T-1] = ct1;
+            BW[i*T + T-1] = bw_c_t_1;
         }
 
         for(int t = T-2; t >= 0; t--) {
-            int ot1 = O[t+1];
-            double ct = C[t];
-
+            int obs = O[t+1];
             for(int i = 0; i < N; i++) {
-                double bwitt = 0.;
+                double accum0 = 0.;
+
                 for(int j = 0; j < N; j++) {
-                    bwitt += BW[j*T + t+1]*A[i*N+j]*B[j*M + ot1];
+                    accum0 += BW[j*T + t+1]*A[i*N+j]*B[j*M + obs];
                 }
-                bwitt *= ct;
-                BW[i*T + t] = bwitt;
+
+                BW[i*T + t] = C[t]*accum0;
             }
         }
         REGION_END(backward_vars)
 
         REGION_BEGIN(update_initial)
+        // update the Initial State probabilities
+        for(int i = 0; i < N; i++) {
+            PI[i] = FW[i*T + 0]*BW[i*T+0]*scales[0];
+        }
         REGION_END(update_initial)
 
         REGION_BEGIN(update_transition)
         // update the State Transition probabilities
-
         for(int i = 0; i < N; i++) {
-
-            PI[i] = FW[i*T] * BW[i*T] * scales0;
-
             for(int j = 0; j < N; j++) {
 
-                double num = 0.;
-                double denom = 0.;
+                double n_accum0 = 0.;
+                double d_accum0 = 0.;
 
                 for(int t = 0; t < T-1; t++) {
-                    double fwitt = FW[i*T + t];
-                    num += fwitt * B[j*M + O[t+1]] * BW[j*T + t+1];
-                    denom += fwitt * BW[i*T + t] * scales[t];
+                    n_accum0 += FW[i*T + t]*A[i*N + j]*B[j*M + O[t+1]]*BW[j*T + t+1];
+
+                    d_accum0 += FW[i*T + t]*BW[i*T + t]*scales[t];
                 }
 
-                num *= A[i*N + j];
-
-                A[i*N + j] = num/denom;
+                A[i*N + j] = n_accum0/d_accum0;
             }
-
         }
         REGION_END(update_transition)
 
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
-        for(int j = 0; j < N; j++) {
+        for(int o = 0; o < M; o++) {
+            for(int j = 0; j < N; j++) {
+                double n_accum0 = 0.;
 
-            double denom = 0.;
+                double d_accum0 = 0.;
 
-            for(int t = 0; t < T; t++) {
-                double fwjtt = FW[j*T + t];
-                double bwjtt = BW[j*T + t];
-                double scalest = scales[t];
+                for(int t = 0; t < T; t++) {
+                    d_accum0 += FW[j*T + t]*BW[j*T + t]*scales[t];
 
-                double toadd = fwjtt * bwjtt * scalest;
-
-                denom += toadd;
-                sum_os[O[t]] += toadd;
-            }
-
-            for(int o = 0; o < M; ++o){
-                B[j*M + o] = sum_os[o]/denom;
-                sum_os[o] = 0;
+                    if(O[t] == o) n_accum0 += FW[j*T + t]*BW[j*T + t]*scales[t];
+                }
+                B[j*M + o] = n_accum0/d_accum0;
             }
         }
 
