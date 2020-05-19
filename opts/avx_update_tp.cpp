@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "common.h"
+#include <immintrin.h>
 
 size_t flop_count(int N, int M, int T, int n_iter){
     size_t add = 0;
@@ -50,12 +51,9 @@ size_t flop_count(int N, int M, int T, int n_iter){
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
-    double* scales = C + T;
-    double* sum_os = scales + T;
-    double* denoms = sum_os + M*N;
-    init_zero(sum_os, M*N);
+    double* scales = (double*) malloc(T*sizeof(double));
 
-    transpose(N,M,B);
+    transpose(N, M, B);
 
     REGION_BEGIN(baum_welch)
 
@@ -63,75 +61,62 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         // Calculate the Forward trellis (scaled)
         REGION_BEGIN(forward_vars)
-
-        double scale0 = 0.;
-        double scale1 = 0.;
-        double scale2 = 0.;
-        double scale3 = 0.;
-
-        int o0 = O[0];
-        for(int i = 0; i < N; i+=4) {
-            double fwit0 = PI[i]*B[i*M + o0];
-            double fwit1 = PI[i+1]*B[(i+1)*M + o0];
-            double fwit2 = PI[i+2]*B[(i+2)*M + o0];
-            double fwit3 = PI[i+3]*B[(i+3)*M + o0];
-
-            FW[i*T] = fwit0;
-            FW[(i+1)*T] = fwit1;
-            FW[(i+2)*T] = fwit2;
-            FW[(i+3)*T] = fwit3;
-
-            scale0 += fwit0;
-            scale1 += fwit1;
-            scale2 += fwit2;
-            scale3 += fwit3;
+        __m256d scale_vec0 = _mm256_setzero_pd();
+        for(int i = 0; i < N-3; i+=4) {
+            __m256d pi_vec = _mm256_loadu_pd(PI + i);
+            __m256d b_vec = _mm256_loadu_pd(B + O[0]*N + i);
+            __m256d result = _mm256_mul_pd(pi_vec, b_vec);
+            _mm256_storeu_pd(FW + 0*N + i, result);
+            scale_vec0 = _mm256_add_pd(scale_vec0, result);
         }
+        __m128d scale_low0 = _mm256_castpd256_pd128(scale_vec0);
+        __m128d scale_high0 = _mm256_extractf128_pd(scale_vec0, 1);
+        __m128d scale_sum0 = _mm_add_pd(scale_low0, scale_high0);
+        __m128d get_high0 = _mm_unpackhi_pd(scale_sum0, scale_sum0);
+        double scale0 = _mm_cvtsd_f64(_mm_add_pd(scale_sum0, get_high0));
+        // Scale timestep 0
 
-        double scale = scale0 + scale1 + scale2 + scale3;
+        C[0] = 1./scale0;
+        scales[0] = scale0;
 
-        double c0 = 1./scale;
-        C[0] = c0;
-        double scales0 = scale;
-        scales[0] = scale;
-
-        for(int i = 0; i < N; i += 4) {
-            FW[i*T] *= c0;
-            FW[(i+1)*T] *= c0;
-            FW[(i+2)*T] *= c0;
-            FW[(i+3)*T] *= c0;
+        __m256d c_0 = _mm256_set1_pd(C[0]);
+        for(int i = 0; i < N-3; i+=4) {
+            __m256d fw_vec = _mm256_loadu_pd(FW + 0*N + i); 
+            __m256d result = _mm256_mul_pd(fw_vec, c_0);
+            _mm256_storeu_pd(FW + 0*N + i, result);
         }
 
         for(int t = 1; t < T; t++) {
-            scale = 0.;
-            int ot = O[t];
-            for(int i = 0; i < N; i++) {
-                double fwitt0 = 0.;
-                double fwitt1 = 0.;
-                double fwitt2 = 0.;
-                double fwitt3 = 0.;
+            __m256d scale_vec = _mm256_setzero_pd();
+            int obs = O[t];
 
-                for(int j = 0; j < N; j += 4) {
-                    fwitt0 += FW[j*T + t-1]*A[j*N + i];
-                    fwitt1 += FW[(j+1)*T + t-1]*A[(j+1)*N + i];
-                    fwitt2 += FW[(j+2)*T + t-1]*A[(j+2)*N + i];
-                    fwitt3 += FW[(j+3)*T + t-1]*A[(j+3)*N + i];
+            for(int i = 0; i < N-3; i+=4) {
+                __m256d accum0 = _mm256_setzero_pd();
+
+                for(int j = 0; j < N; j++) {
+
+                    __m256d fw_vec0 = _mm256_set1_pd(FW[(t-1)*N + j]);
+                    __m256d a_vec0 = _mm256_loadu_pd(A + j*N + i);
+                    accum0 = _mm256_fmadd_pd(fw_vec0, a_vec0, accum0);
+
                 }
-
-                double fwitt = (fwitt0+fwitt1+fwitt2+fwitt3) * B[i*M + ot];
-
-                FW[i*T + t] = fwitt;
-                scale += fwitt;
+                __m256d b_vec = _mm256_loadu_pd(B + obs*N + i);
+                __m256d result = _mm256_mul_pd(accum0, b_vec);
+                scale_vec = _mm256_add_pd(result, scale_vec);
+                _mm256_storeu_pd(FW + t*N + i, result);
             }
 
-            double ct = 1./scale;
-            C[t] = ct;
+            __m128d scale_low = _mm256_castpd256_pd128(scale_vec);
+            __m128d scale_high = _mm256_extractf128_pd(scale_vec, 1);
+            __m128d scale_sum = _mm_add_pd(scale_low, scale_high);
+            __m128d get_high = _mm_unpackhi_pd(scale_sum, scale_sum);
+            double scale = _mm_cvtsd_f64(_mm_add_pd(scale_sum, get_high));
+
+            C[t] = 1./scale;
             scales[t] = scale;
 
-            for(int i = 0; i < N; i += 4) {
-                FW[i*T + t] *= ct;
-                FW[(i+1)*T + t] *= ct;
-                FW[(i+2)*T + t] *= ct;
-                FW[(i+3)*T + t] *= ct;
+            for(int i = 0; i < N; i++) {
+                FW[t*N + i]*= C[t];
             }
         }
 
@@ -139,135 +124,123 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         REGION_BEGIN(backward_vars)
         // Calculate the Backward trellis (scaled)
-        double ct1 = C[T-1];
-
-        for(int i = 0; i < N; i+=4) {
-            BW[i*T + T-1] = ct1;
-            BW[(i+1)*T + T-1] = ct1;
-            BW[(i+2)*T + T-1] = ct1;
-            BW[(i+3)*T + T-1] = ct1;
+        __m256d bw_c_t_1 = _mm256_set1_pd(C[T-1]);
+        for(int i = 0; i < N-3; i+= 4) {
+            _mm256_storeu_pd(BW + (T-1)*N + i, bw_c_t_1);
         }
 
         for(int t = T-2; t >= 0; t--) {
-            int ot1 = O[t+1];
-            double ct = C[t];
+            int obs = O[t+1];
+            int limit = N-3;
+            for(int i = 0; i < limit; i+=4) {
+                __m256d accum0 = _mm256_setzero_pd();
+                __m256d accum1 = _mm256_setzero_pd();
+                __m256d accum2 = _mm256_setzero_pd();
+                __m256d accum3 = _mm256_setzero_pd();
 
-            for(int i = 0; i < N; i++) {
-                double bwitt0 = 0.;
-                double bwitt1 = 0.;
-                double bwitt2 = 0.;
-                double bwitt3 = 0.;
-                for(int j = 0; j < N; j+=4) {
-                    bwitt0 += BW[j*T + t+1]*A[i*N+j]*B[j*M + ot1];
-                    bwitt1 += BW[(j+1)*T + t+1]*A[i*N+j+1]*B[(j+1)*M + ot1];
-                    bwitt2 += BW[(j+2)*T + t+1]*A[i*N+j+2]*B[(j+2)*M + ot1];
-                    bwitt3 += BW[(j+3)*T + t+1]*A[i*N+j+3]*B[(j+3)*M + ot1];
+                for(int j = 0; j < limit; j+=4) {
+                    __m256d A_i0 = _mm256_loadu_pd(A + i*N + j);
+                    __m256d A_i1 = _mm256_loadu_pd(A + (i+1)*N + j);
+                    __m256d A_i2 = _mm256_loadu_pd(A + (i+2)*N + j);
+                    __m256d A_i3 = _mm256_loadu_pd(A + (i+3)*N + j);
+
+                    __m256d BW_t = _mm256_loadu_pd(BW + (t+1)*N + j);
+                    __m256d B_t = _mm256_loadu_pd(B + obs*N + j); 
+
+                    __m256d mul = _mm256_mul_pd(BW_t, B_t);
+
+                    accum0 = _mm256_fmadd_pd(A_i0, mul, accum0);
+                    accum1 = _mm256_fmadd_pd(A_i1, mul, accum1);
+                    accum2 = _mm256_fmadd_pd(A_i2, mul, accum2);
+                    accum3 = _mm256_fmadd_pd(A_i3, mul, accum3);
                 }
-                double bwitt = (bwitt0+bwitt1+bwitt2+bwitt3)*ct;
-                BW[i*T + t] = bwitt;
+                __m256d hadd0 = _mm256_hadd_pd(accum0, accum1);
+                __m256d hadd1 = _mm256_hadd_pd(accum2, accum3);
+                
+                __m256d blend = _mm256_blend_pd(hadd0, hadd1, 0xC);
+                __m256d permute = _mm256_permute2f128_pd(hadd0, hadd1, 0x21); 
+                __m256d sum = _mm256_add_pd(blend, permute);
+                __m256d c_t = _mm256_set1_pd(C[t]);
+                __m256d result = _mm256_mul_pd(c_t,sum);
+                _mm256_storeu_pd(BW + t*N + i, result);
             }
         }
         REGION_END(backward_vars)
 
         REGION_BEGIN(update_initial)
+        // update the Initial State probabilities
+        for(int i = 0; i < N; i++) {
+            PI[i] = FW[0*N + i]*BW[0*N + i]*scales[0];
+        }
         REGION_END(update_initial)
 
         REGION_BEGIN(update_transition)
         // update the State Transition probabilities
-
-        double scalest1 = scales[T-1];
-        int ot1 = O[T-1];
-        int ot2 = O[T-2];
-        int ot3 = O[T-3];
-
         for(int i = 0; i < N; i++) {
-
-            double pi = FW[i*T] * BW[i*T] * scales0;
-
-            sum_os[i*M + o0] = pi;
-            PI[i] = pi;
-
-            double denom0 = 0;
-            double denom1 = 0;
-            double denom2 = 0;
-            double denom3 = 0;
-
-            for(int t = 1; t < T-3; t+=4) {
-                double toadd0 = FW[i*T + t] * BW[i*T + t] * scales[t];
-                double toadd1 = FW[i*T + t+1] * BW[i*T + t+1] * scales[t+1];
-                double toadd2 = FW[i*T + t+2] * BW[i*T + t+2] * scales[t+2];
-                double toadd3 = FW[i*T + t+3] * BW[i*T + t+3] * scales[t+3];
-
-                denom0 += toadd0;
-                denom1 += toadd1;
-                denom2 += toadd2;
-                denom3 += toadd3;
-
-                sum_os[i*M + O[t]] += toadd0;
-                sum_os[i*M + O[t+1]] += toadd1;
-                sum_os[i*M + O[t+2]] += toadd2;
-                sum_os[i*M + O[t+3]] += toadd3;
-            }
-
-            // leftover 2 iterations
-            double toadd0 = FW[i*T + T-3] * BW[i*T + T-3] * scales[T-3];
-            double toadd1 = FW[i*T + T-2] * BW[i*T + T-2] * scales[T-2];
-
-            denom0 += toadd0;
-            denom1 += toadd1;
-
-            sum_os[i*M + ot3] += toadd0;
-            sum_os[i*M + ot2] += toadd1;
-
-            double denom = denom0+denom1+denom2+denom3+pi;
-
-            double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scalest1;
-            denoms[i] = denom + lastadd;
-            sum_os[i*M + ot1] += lastadd;
-
             for(int j = 0; j < N; j++) {
-                double num0 = 0.;
-                double num1 = 0.;
-                double num2 = 0.;
-                double num3 = 0.;
+            
+                double n_accum0 = 0.;
+                double n_accum1 = 0.;
+                double n_accum2 = 0.;
+                double n_accum3 = 0.;
 
-                for(int t = 0; t < T-4; t+=4) {
-                    num0 += FW[i*T + t] * B[j*M + O[t+1]] * BW[j*T + t+1];
-                    num1 += FW[i*T + t+1] * B[j*M + O[t+2]] * BW[j*T + t+2];
-                    num2 += FW[i*T + t+2] * B[j*M + O[t+3]] * BW[j*T + t+3];
-                    num3 += FW[i*T + t+3] * B[j*M + O[t+4]] * BW[j*T + t+4];
+                double d_accum0 = 0.;
+                double d_accum1 = 0.;
+                double d_accum2 = 0.;
+                double d_accum3 = 0.;
+
+                int t = 0;
+                for(; t < T-4; t+=4) {
+                    n_accum0 += FW[t*N + i]*A[i*N + j]*B[O[t+1]*N + j]*BW[(t+1)*N + j];
+                    n_accum1 += FW[(t+1)*N + i]*A[i*N + j]*B[O[t+2]*N + j]*BW[(t+2)*N + j];
+                    n_accum2 += FW[(t+2)*N + i]*A[i*N + j]*B[O[t+3]*N + j]*BW[(t+3)*N + j];
+                    n_accum3 += FW[(t+3)*N + i]*A[i*N + j]*B[O[t+4]*N + j]*BW[(t+4)*N + j];
+
+                    d_accum0 += FW[t*N + i]*BW[t*N + i]*scales[t];
+                    d_accum1 += FW[(t+1)*N + i]*BW[(t+1)*N + i]*scales[t+1];
+                    d_accum2 += FW[(t+2)*N + i]*BW[(t+2)*N + i]*scales[t+2];
+                    d_accum3 += FW[(t+3)*N + i]*BW[(t+3)*N + i]*scales[t+3];
                 }
-
-                num0 += FW[i*T + T-4] * B[j*M + ot3] * BW[j*T + T-3];
-                num1 += FW[i*T + T-3] * B[j*M + ot2] * BW[j*T + T-2];
-                num2 += FW[i*T + T-2] * B[j*M + ot1] * BW[j*T + T-1];
-
-                double num = (num0+num1+num2+num3)*A[i*N + j];
-                A[i*N + j] = num/denom;
+                for(; t < T-1; t++) {
+                    n_accum0 += FW[t*N + i]*A[i*N + j]*B[O[t+1]*N + j]*BW[(t+1)*N + j];
+                    d_accum0 += FW[t*N + i]*BW[t*N + i]*scales[t]; 
+                }
+                A[i*N + j] = (n_accum0 + n_accum1 + n_accum2 + n_accum3)/(d_accum0 + d_accum1 + d_accum2 + d_accum3);
             }
         }
         REGION_END(update_transition)
 
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
-        for(int i = 0; i < N; i++) {
-            double denomsi = denoms[i];
-            for(int o = 0; o < M; o += 4){
-                B[i*M + o] = sum_os[i*M + o]/denomsi;
-                B[i*M + o+1] = sum_os[i*M + o+1]/denomsi;
-                B[i*M + o+2] = sum_os[i*M + o+2]/denomsi;
-                B[i*M + o+3] = sum_os[i*M + o+3]/denomsi;
+        for(int o = 0; o < M; o++) {
+            for(int j = 0; j < N; j++) {
+                double n_accum0 = 0.;
+                double n_accum1 = 0.;
+                double n_accum2 = 0.;
+                double n_accum3 = 0.;
 
-                sum_os[i*M + o] = 0;
-                sum_os[i*M + o+1] = 0;
-                sum_os[i*M + o+2] = 0;
-                sum_os[i*M + o+3] = 0;
+                double d_accum0 = 0.;
+                double d_accum1 = 0.;
+                double d_accum2 = 0.;
+                double d_accum3 = 0.;
+                for(int t = 0; t < T-3; t+=4) {
+                    d_accum0 += FW[t*N + j]*BW[t*N + j]*scales[t];
+                    d_accum1 += FW[(t+1)*N + j]*BW[(t+1)*N + j]*scales[t+1];
+                    d_accum2 += FW[(t+2)*N + j]*BW[(t+2)*N + j]*scales[t+2];
+                    d_accum3 += FW[(t+3)*N + j]*BW[(t+3)*N + j]*scales[t+3];
+
+                    if(O[t] == o) n_accum0 += FW[t*N + j]*BW[t*N + j]*scales[t];
+                    if(O[t+1] == o) n_accum1 += FW[(t+1)*N + j]*BW[(t+1)*N + j]*scales[t+1];
+                    if(O[t+2] == o) n_accum2 += FW[(t+2)*N + j]*BW[(t+2)*N + j]*scales[t+2];
+                    if(O[t+3] == o) n_accum3 += FW[(t+3)*N + j]*BW[(t+3)*N + j]*scales[t+3];
+                }
+                B[o*N + j] = (n_accum0+n_accum1+n_accum2+n_accum3)/(d_accum0+d_accum1+d_accum2+d_accum3);
             }
         }
+
         REGION_END(update_emission)
     }
 
     REGION_END(baum_welch)
-
-    transpose(M,N,B);
+    transpose(M, N, B);
 }
