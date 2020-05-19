@@ -134,6 +134,8 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(update_transition)
         // update the State Transition probabilities
 
+        double scalest1 = scales[T-1];
+
         for(int i = 0; i < N; i++) {
 
             PI[i] = FW[i*T] * BW[i*T] * scales0;
@@ -146,7 +148,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 sum_os[i*M + O[t]] += toadd;
             }
 
-            double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scales[T-1];
+            double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scalest1;
             denoms[i] = denom + lastadd;
             sum_os[i*M + O[T-1]] += lastadd;
 
