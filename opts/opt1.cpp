@@ -51,7 +51,8 @@ size_t flop_count(int N, int M, int T, int n_iter){
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
     double* scales = C + T;
-    double* denoms = scales + T;
+    double* sum_os = scales + T;
+    init_zero(sum_os, M);
 
     REGION_BEGIN(baum_welch)
 
@@ -141,15 +142,13 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 double num = 0.;
                 double denom = 0.;
 
-                double ainj = A[i*N + j];
-
                 for(int t = 0; t < T-1; t++) {
                     double fwitt = FW[i*T + t];
                     num += fwitt * B[j*M + O[t+1]] * BW[j*T + t+1];
                     denom += fwitt * BW[i*T + t] * scales[t];
                 }
 
-                num *= ainj;
+                num *= A[i*N + j];
 
                 A[i*N + j] = num/denom;
             }
@@ -160,21 +159,21 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
         for(int j = 0; j < N; j++) {
-            for(int o = 0; o < M; o++) {
 
-                double sum_o = 0.;
-                double denom = 0.;
+            double denom = 0.;
 
-                for(int t = 0; t < T; t++) {
-                    double fwjtt = FW[j*T + t];
-                    double bwjtt = BW[j*T + t];
-                    double scalest = scales[t];
+            for(int t = 0; t < T; t++) {
+                double fwjtt = FW[j*T + t];
+                double bwjtt = BW[j*T + t];
+                double scalest = scales[t];
 
-                    denom += fwjtt * bwjtt * scalest;
-                    if(O[t] == o) sum_o += fwjtt * bwjtt * scalest;
-                }
+                denom += fwjtt * bwjtt * scalest;
+                sum_os[O[t]] += fwjtt * bwjtt * scalest;
+            }
 
-                B[j*M + o] = sum_o/denom;
+            for(int o = 0; o < M; ++o){
+                B[j*M + o] = sum_os[o]/denom;
+                sum_os[o] = 0;
             }
         }
 

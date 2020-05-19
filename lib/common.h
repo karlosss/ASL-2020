@@ -23,6 +23,8 @@ size_t flop_count(int N, int M, int T, int n_iter);
 
 void transpose(size_t N, size_t M, double* X);
 
+void init_zero(double* arr, size_t len);
+
 void handle_error (int retval);
 
 #endif //ASL_PROJECT_COMMON_H

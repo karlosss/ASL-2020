@@ -34,6 +34,12 @@ void generate_m(double** M, size_t row, size_t col) {
     }
 }
 
+void init_zero(double* arr, size_t len){
+    for(int i = 0; i < len; ++i){
+        arr[i] = 0.;
+    }
+}
+
 void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double** A, double** B, double** FW, double** BW, double** C){
     char* arr = (char*) malloc(
             T*sizeof(int) + // generate_observation(O, T, M);
@@ -44,7 +50,7 @@ void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double**
             N*T*sizeof(double) + // *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
             T*sizeof(double) +     // *C = static_cast<double *>(malloc(T * sizeof(double)));
             T*sizeof(double) +  // scales (size T)
-            N*T*sizeof(double) // denom (size N*T)
+            M*sizeof(double) // sum_os (size M)
 
     );
 

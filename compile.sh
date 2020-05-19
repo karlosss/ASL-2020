@@ -64,9 +64,9 @@ cd bin || exit 3
 wrong=0
 correct=0
 
-N=20
-M=10
-T=100
+N=32
+M=32
+T=128
 num_iter=50
 
 for i in $executables
