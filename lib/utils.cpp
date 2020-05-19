@@ -50,8 +50,8 @@ void generate_input(size_t N, size_t M, size_t T, int** O, double** PI, double**
             N*T*sizeof(double) + // *BW = static_cast<double *>(malloc(N * T * sizeof(double)));
             T*sizeof(double) +     // *C = static_cast<double *>(malloc(T * sizeof(double)));
             T*sizeof(double) +  // scales (size T)
-            M*sizeof(double) // sum_os (size M)
-
+            M*N*sizeof(double) + // sum_os (size M*N)
+            N*sizeof(double) // denoms (size N)
     );
 
     size_t ptr = 0;

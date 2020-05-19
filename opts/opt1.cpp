@@ -52,7 +52,8 @@ size_t flop_count(int N, int M, int T, int n_iter){
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
     double* scales = C + T;
     double* sum_os = scales + T;
-    init_zero(sum_os, M);
+    double* denoms = sum_os + M*N;
+    init_zero(sum_os, M*N);
 
     REGION_BEGIN(baum_welch)
 
@@ -137,44 +138,39 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
             PI[i] = FW[i*T] * BW[i*T] * scales0;
 
-            for(int j = 0; j < N; j++) {
+            double denom = 0.;
 
+            for(int t = 0; t < T-1; t++) {
+                double toadd = FW[i*T + t] * BW[i*T + t] * scales[t];
+                denom += toadd;
+                sum_os[i*M + O[t]] += toadd;
+            }
+
+            double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scales[T-1];
+            denoms[i] = denom + lastadd;
+            sum_os[i*M + O[T-1]] += lastadd;
+
+            for(int j = 0; j < N; j++) {
                 double num = 0.;
-                double denom = 0.;
 
                 for(int t = 0; t < T-1; t++) {
-                    double fwitt = FW[i*T + t];
-                    num += fwitt * B[j*M + O[t+1]] * BW[j*T + t+1];
-                    denom += fwitt * BW[i*T + t] * scales[t];
+                    num += FW[i*T + t] * B[j*M + O[t+1]] * BW[j*T + t+1];
                 }
 
                 num *= A[i*N + j];
-
                 A[i*N + j] = num/denom;
             }
-
         }
         REGION_END(update_transition)
 
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
-        for(int j = 0; j < N; j++) {
-
-            double denom = 0.;
-
-            for(int t = 0; t < T; t++) {
-                double toadd = FW[j*T + t] * BW[j*T + t] * scales[t];
-
-                denom += toadd;
-                sum_os[O[t]] += toadd;
-            }
-
+        for(int i = 0; i < N; i++) {
             for(int o = 0; o < M; ++o){
-                B[j*M + o] = sum_os[o]/denom;
-                sum_os[o] = 0;
+                B[i*M + o] = sum_os[i*M + o]/denoms[i];
+                sum_os[i*M + o] = 0;
             }
         }
-
         REGION_END(update_emission)
     }
 
