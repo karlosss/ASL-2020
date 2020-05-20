@@ -183,133 +183,191 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         int ot1 = O[T-1];
 
         for(int i = 0; i < N; i+=4) {
+            // double pi0 = FW[i+0] * BW[i+0] * scales0;
+            // double pi1 = FW[i+1] * BW[i+1] * scales0;
+            // double pi2 = FW[i+2] * BW[i+2] * scales0;
+            // double pi3 = FW[i+3] * BW[i+3] * scales0;
             __m256d FW_i = _mm256_loadu_pd(&FW[i]);
             __m256d BW_i = _mm256_loadu_pd(&BW[i]);
-            __m256d scales0_vec = _mm256_set1_pd(scales0);
-
-            double pi0 = FW[i+0] * BW[i+0] * scales0;
-            double pi1 = FW[i+1] * BW[i+1] * scales0;
-            double pi2 = FW[i+2] * BW[i+2] * scales0;
-            double pi3 = FW[i+3] * BW[i+3] * scales0;
-
+            __m256d scales_0 = _mm256_set1_pd(scales0);
             __m256d FW_BW_i = _mm256_mul_pd(FW_i, BW_i);
-            __m256d pi_i = _mm256_mul_pd(FW_BW_i, scales0_vec);
-            
-            __m256d sum_os_io0 = _mm256_loadu_pd(&FW[i]);
+            __m256d pi_i = _mm256_mul_pd(FW_BW_i, scales_0);
+            // sum_os[(i+0) + o0*N] = pi0;
+            // sum_os[(i+1) + o0*N] = pi1;
+            // sum_os[(i+2) + o0*N] = pi2;
+            // sum_os[(i+3) + o0*N] = pi3;
+            _mm256_storeu_pd(&sum_os[i + o0*N], pi_i);
 
-            sum_os[(i+0) + o0*N] = pi0;
-            sum_os[(i+1) + o0*N] = pi1;
-            sum_os[(i+2) + o0*N] = pi2;
-            sum_os[(i+3) + o0*N] = pi3;
+            // PI[i+0] = pi0;
+            // PI[i+1] = pi1;
+            // PI[i+2] = pi2;
+            // PI[i+3] = pi3;
+            _mm256_storeu_pd(&PI[i], pi_i);
 
-
-
-            PI[i+0] = pi0;
-            PI[i+1] = pi1;
-            PI[i+2] = pi2;
-            PI[i+3] = pi3;
-
-            double denomi0 = 0.0;
-            double denomi1 = 0.0;
-            double denomi2 = 0.0;
-            double denomi3 = 0.0;
+            // double denomi0 = 0.0;
+            // double denomi1 = 0.0;
+            // double denomi2 = 0.0;
+            // double denomi3 = 0.0;
+            __m256d denom_i = _mm256_setzero_pd();
             for(int t = 1; t < T-1; t+=1) {
-                double toaddi0 = FW[(i+0) + t*N] * BW[(i+0) + t*N] * scales[t];
-                double toaddi1 = FW[(i+1) + t*N] * BW[(i+1) + t*N] * scales[t];
-                double toaddi2 = FW[(i+2) + t*N] * BW[(i+2) + t*N] * scales[t];
-                double toaddi3 = FW[(i+3) + t*N] * BW[(i+3) + t*N] * scales[t];
+                // double toaddi0 = FW[(i+0) + t*N] * BW[(i+0) + t*N] * scales[t];
+                // double toaddi1 = FW[(i+1) + t*N] * BW[(i+1) + t*N] * scales[t];
+                // double toaddi2 = FW[(i+2) + t*N] * BW[(i+2) + t*N] * scales[t];
+                // double toaddi3 = FW[(i+3) + t*N] * BW[(i+3) + t*N] * scales[t];
+                __m256d FW_it = _mm256_loadu_pd(&FW[i + t*N]);
+                __m256d BW_it = _mm256_loadu_pd(&BW[i + t*N]);
+                __m256d scales_t = _mm256_broadcast_sd(&scales[t]);
+                __m256d FW_BW_it = _mm256_mul_pd(FW_it, BW_it);
+                __m256d toadd_i = _mm256_mul_pd(FW_BW_it, scales_t);
 
-                denomi0 += toaddi0;
-                denomi1 += toaddi1;
-                denomi2 += toaddi2;
-                denomi3 += toaddi3;
+                // denomi0 += toaddi0;
+                // denomi1 += toaddi1;
+                // denomi2 += toaddi2;
+                // denomi3 += toaddi3;
+                denom_i = _mm256_add_pd(denom_i, toadd_i);
+                
+                // sum_os[(i+0) + O[t]*N] += toaddi0;
+                // sum_os[(i+1) + O[t]*N] += toaddi1;
+                // sum_os[(i+2) + O[t]*N] += toaddi2;
+                // sum_os[(i+3) + O[t]*N] += toaddi3;
+                __m256d sums_os_iOt = _mm256_loadu_pd(&sum_os[(i+0) + O[t]*N]);
+                sums_os_iOt = _mm256_add_pd(sums_os_iOt, toadd_i);
+                _mm256_storeu_pd(&sum_os[(i+0) + O[t]*N], sums_os_iOt);
 
-                sum_os[(i+0) + O[t]*N] += toaddi0;
-                sum_os[(i+1) + O[t]*N] += toaddi1;
-                sum_os[(i+2) + O[t]*N] += toaddi2;
-                sum_os[(i+3) + O[t]*N] += toaddi3;
+
             }
-            denomi0 += pi0;
-            denomi1 += pi1;
-            denomi2 += pi2;
-            denomi3 += pi3;
+            // denomi0 += pi0;
+            // denomi1 += pi1;
+            // denomi2 += pi2;
+            // denomi3 += pi3;
+            denom_i = _mm256_add_pd(denom_i, pi_i);
 
-            double lastaddi0 = FW[(i+0) + (T-1)*N] * BW[(i+0) + (T-1)*N] * scalest1;
-            double lastaddi1 = FW[(i+1) + (T-1)*N] * BW[(i+1) + (T-1)*N] * scalest1;
-            double lastaddi2 = FW[(i+2) + (T-1)*N] * BW[(i+2) + (T-1)*N] * scalest1;
-            double lastaddi3 = FW[(i+3) + (T-1)*N] * BW[(i+3) + (T-1)*N] * scalest1;
+            // double lastaddi0 = FW[(i+0) + (T-1)*N] * BW[(i+0) + (T-1)*N] * scalest1;
+            // double lastaddi1 = FW[(i+1) + (T-1)*N] * BW[(i+1) + (T-1)*N] * scalest1;
+            // double lastaddi2 = FW[(i+2) + (T-1)*N] * BW[(i+2) + (T-1)*N] * scalest1;
+            // double lastaddi3 = FW[(i+3) + (T-1)*N] * BW[(i+3) + (T-1)*N] * scalest1;
+            __m256d FW_iT = _mm256_loadu_pd(&FW[(i+0) + (T-1)*N]);
+            __m256d BW_iT = _mm256_loadu_pd(&BW[(i+0) + (T-1)*N]);
+            __m256d scales_T = _mm256_set1_pd(scalest1);
+            __m256d FW_BW_iT = _mm256_mul_pd(FW_iT, BW_iT);
+            __m256d lastadd_i = _mm256_mul_pd(FW_BW_iT, scales_T);
+            
+            // denoms[i+0] = denomi0 + lastaddi0;
+            // denoms[i+1] = denomi1 + lastaddi1;
+            // denoms[i+2] = denomi2 + lastaddi2;
+            // denoms[i+3] = denomi3 + lastaddi3;
+            _mm256_storeu_pd(&denoms[i], _mm256_add_pd(denom_i, lastadd_i));
 
-            denoms[i+0] = denomi0 + lastaddi0;
-            denoms[i+1] = denomi1 + lastaddi1;
-            denoms[i+2] = denomi2 + lastaddi2;
-            denoms[i+3] = denomi3 + lastaddi3;
-
-            sum_os[(i+0) + ot1*N] += lastaddi0;
-            sum_os[(i+1) + ot1*N] += lastaddi1;
-            sum_os[(i+2) + ot1*N] += lastaddi2;
-            sum_os[(i+3) + ot1*N] += lastaddi3;
+            // sum_os[(i+0) + ot1*N] += lastaddi0;
+            // sum_os[(i+1) + ot1*N] += lastaddi1;
+            // sum_os[(i+2) + ot1*N] += lastaddi2;
+            // sum_os[(i+3) + ot1*N] += lastaddi3;
+            __m256d sum_os_iOT =  _mm256_loadu_pd(&sum_os[i + ot1*N]);
+            sum_os_iOT = _mm256_add_pd(sum_os_iOT, lastadd_i);
+            _mm256_storeu_pd(&sum_os[i + ot1*N], sum_os_iOT);
 
             for(int j = 0; j < N; j += 4) {
-                double numi0j0 = 0.0;
-                double numi0j1 = 0.0;
-                double numi0j2 = 0.0;
-                double numi0j3 = 0.0;
+                // double numi0j0 = 0.0;
+                // double numi0j1 = 0.0;
+                // double numi0j2 = 0.0;
+                // double numi0j3 = 0.0;
+                __m256d num_i0j = _mm256_setzero_pd();
 
-                double numi1j0 = 0.0;
-                double numi1j1 = 0.0;
-                double numi1j2 = 0.0;
-                double numi1j3 = 0.0;
+                // double numi1j0 = 0.0;
+                // double numi1j1 = 0.0;
+                // double numi1j2 = 0.0;
+                // double numi1j3 = 0.0;
+                __m256d num_i1j = _mm256_setzero_pd();
 
-                double numi2j0 = 0.0;
-                double numi2j1 = 0.0;
-                double numi2j2 = 0.0;
-                double numi2j3 = 0.0;
+                // double numi2j0 = 0.0;
+                // double numi2j1 = 0.0;
+                // double numi2j2 = 0.0;
+                // double numi2j3 = 0.0;
+                __m256d num_i2j = _mm256_setzero_pd();
 
-                double numi3j0 = 0.0;
-                double numi3j1 = 0.0;
-                double numi3j2 = 0.0;
-                double numi3j3 = 0.0;
+                // double numi3j0 = 0.0;
+                // double numi3j1 = 0.0;
+                // double numi3j2 = 0.0;
+                // double numi3j3 = 0.0;
+                __m256d num_i3j = _mm256_setzero_pd();
 
                 for(int t = 0; t < T-1; t+=1) {
-                    numi0j0 += FW[(i+0) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi0j1 += FW[(i+0) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
-                    numi0j2 += FW[(i+0) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
-                    numi0j3 += FW[(i+0) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    __m256d B_jOt1 = _mm256_loadu_pd(&B[(j+0) + O[t+1]*N]);
+                    __m256d BW_jt1 = _mm256_loadu_pd(&BW[(j+0) + (t+1)*N]);
+                    __m256d B_BW = _mm256_mul_pd(B_jOt1, BW_jt1);
 
-                    numi1j0 += FW[(i+1) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi1j1 += FW[(i+1) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
-                    numi1j2 += FW[(i+1) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
-                    numi1j3 += FW[(i+1) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    // numi0j0 += FW[(i+0) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    // numi0j1 += FW[(i+0) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    // numi0j2 += FW[(i+0) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    // numi0j3 += FW[(i+0) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    __m256d FW_i0t = _mm256_broadcast_sd(&FW[(i+0) + (t  )*N]);
+                    num_i0j = _mm256_fmadd_pd(B_BW, FW_i0t, num_i0j);
 
-                    numi2j0 += FW[(i+2) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi2j1 += FW[(i+2) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
-                    numi2j2 += FW[(i+2) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
-                    numi2j3 += FW[(i+2) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    // numi1j0 += FW[(i+1) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    // numi1j1 += FW[(i+1) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    // numi1j2 += FW[(i+1) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    // numi1j3 += FW[(i+1) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    __m256d FW_i1t = _mm256_broadcast_sd(&FW[(i+1) + (t  )*N]);
+                    num_i1j = _mm256_fmadd_pd(B_BW, FW_i1t, num_i1j);
 
-                    numi3j0 += FW[(i+3) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi3j1 += FW[(i+3) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
-                    numi3j2 += FW[(i+3) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
-                    numi3j3 += FW[(i+3) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    // numi2j0 += FW[(i+2) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    // numi2j1 += FW[(i+2) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    // numi2j2 += FW[(i+2) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    // numi2j3 += FW[(i+2) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    __m256d FW_i2t = _mm256_broadcast_sd(&FW[(i+2) + (t  )*N]);
+                    num_i2j = _mm256_fmadd_pd(B_BW, FW_i2t, num_i2j);
+
+                    // numi3j0 += FW[(i+3) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    // numi3j1 += FW[(i+3) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    // numi3j2 += FW[(i+3) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    // numi3j3 += FW[(i+3) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    __m256d FW_i3t = _mm256_broadcast_sd(&FW[(i+3) + (t  )*N]);
+                    num_i3j = _mm256_fmadd_pd(B_BW, FW_i3t, num_i3j);
                 }
-                A[(i+0)*N + (j+0)] = numi0j0*A[(i+0)*N + (j+0)]/denomi0;
-                A[(i+0)*N + (j+1)] = numi0j1*A[(i+0)*N + (j+1)]/denomi0;
-                A[(i+0)*N + (j+2)] = numi0j2*A[(i+0)*N + (j+2)]/denomi0;
-                A[(i+0)*N + (j+3)] = numi0j3*A[(i+0)*N + (j+3)]/denomi0;
+                __m256d ones = _mm256_set1_pd(1.0);
+                __m256d denom_inv_i = _mm256_div_pd(ones, denom_i);
 
-                A[(i+1)*N + (j+0)] = numi1j0*A[(i+1)*N + (j+0)]/denomi1;
-                A[(i+1)*N + (j+1)] = numi1j1*A[(i+1)*N + (j+1)]/denomi1;
-                A[(i+1)*N + (j+2)] = numi1j2*A[(i+1)*N + (j+2)]/denomi1;
-                A[(i+1)*N + (j+3)] = numi1j3*A[(i+1)*N + (j+3)]/denomi1;
+                // TODO: Find a better way for this
+                __m256d denom_inv_i0 = _mm256_set1_pd(((double)(denom_inv_i)[0]));
+                __m256d denom_inv_i1 = _mm256_set1_pd(((double)(denom_inv_i)[1]));
+                __m256d denom_inv_i2 = _mm256_set1_pd(((double)(denom_inv_i)[2]));
+                __m256d denom_inv_i3 = _mm256_set1_pd(((double)(denom_inv_i)[3]));
 
-                A[(i+2)*N + (j+0)] = numi2j0*A[(i+2)*N + (j+0)]/denomi2;
-                A[(i+2)*N + (j+1)] = numi2j1*A[(i+2)*N + (j+1)]/denomi2;
-                A[(i+2)*N + (j+2)] = numi2j2*A[(i+2)*N + (j+2)]/denomi2;
-                A[(i+2)*N + (j+3)] = numi2j3*A[(i+2)*N + (j+3)]/denomi2;
+                // A[(i+0)*N + (j+0)] = numi0j0*A[(i+0)*N + (j+0)]/denomi0;
+                // A[(i+0)*N + (j+1)] = numi0j1*A[(i+0)*N + (j+1)]/denomi0;
+                // A[(i+0)*N + (j+2)] = numi0j2*A[(i+0)*N + (j+2)]/denomi0;
+                // A[(i+0)*N + (j+3)] = numi0j3*A[(i+0)*N + (j+3)]/denomi0;
+                __m256d A_i0j = _mm256_loadu_pd(&A[(i+0)*N + (j+0)]);
+                __m256d num_denom_inv_i0 = _mm256_mul_pd(num_i0j, denom_inv_i0);
+                A_i0j = _mm256_mul_pd(A_i0j, num_denom_inv_i0);
+                _mm256_storeu_pd(&A[(i+0)*N + (j+0)], A_i0j);
 
-                A[(i+3)*N + (j+0)] = numi3j0*A[(i+3)*N + (j+0)]/denomi3;
-                A[(i+3)*N + (j+1)] = numi3j1*A[(i+3)*N + (j+1)]/denomi3;
-                A[(i+3)*N + (j+2)] = numi3j2*A[(i+3)*N + (j+2)]/denomi3;
-                A[(i+3)*N + (j+3)] = numi3j3*A[(i+3)*N + (j+3)]/denomi3;
+                // A[(i+1)*N + (j+0)] = numi1j0*A[(i+1)*N + (j+0)]/denomi1;
+                // A[(i+1)*N + (j+1)] = numi1j1*A[(i+1)*N + (j+1)]/denomi1;
+                // A[(i+1)*N + (j+2)] = numi1j2*A[(i+1)*N + (j+2)]/denomi1;
+                // A[(i+1)*N + (j+3)] = numi1j3*A[(i+1)*N + (j+3)]/denomi1;
+                __m256d A_i1j = _mm256_loadu_pd(&A[(i+1)*N + (j+0)]);
+                __m256d num_denom_inv_i1 = _mm256_mul_pd(num_i1j, denom_inv_i1);
+                A_i1j = _mm256_mul_pd(A_i1j, num_denom_inv_i1);
+                _mm256_storeu_pd(&A[(i+1)*N + (j+0)], A_i1j);
+
+                // A[(i+2)*N + (j+0)] = numi2j0*A[(i+2)*N + (j+0)]/denomi2;
+                // A[(i+2)*N + (j+1)] = numi2j1*A[(i+2)*N + (j+1)]/denomi2;
+                // A[(i+2)*N + (j+2)] = numi2j2*A[(i+2)*N + (j+2)]/denomi2;
+                // A[(i+2)*N + (j+3)] = numi2j3*A[(i+2)*N + (j+3)]/denomi2;
+                __m256d A_i2j = _mm256_loadu_pd(&A[(i+2)*N + (j+0)]);
+                __m256d num_denom_inv_i2 = _mm256_mul_pd(num_i2j, denom_inv_i2);
+                A_i2j = _mm256_mul_pd(A_i2j, num_denom_inv_i2);
+                _mm256_storeu_pd(&A[(i+2)*N + (j+0)], A_i2j);
+
+                // A[(i+3)*N + (j+0)] = numi3j0*A[(i+3)*N + (j+0)]/denomi3;
+                // A[(i+3)*N + (j+1)] = numi3j1*A[(i+3)*N + (j+1)]/denomi3;
+                // A[(i+3)*N + (j+2)] = numi3j2*A[(i+3)*N + (j+2)]/denomi3;
+                // A[(i+3)*N + (j+3)] = numi3j3*A[(i+3)*N + (j+3)]/denomi3;
+                __m256d A_i3j = _mm256_loadu_pd(&A[(i+3)*N + (j+0)]);
+                __m256d num_denom_inv_i3 = _mm256_mul_pd(num_i3j, denom_inv_i3);
+                A_i3j = _mm256_mul_pd(A_i3j, num_denom_inv_i3);
+                _mm256_storeu_pd(&A[(i+3)*N + (j+0)], A_i3j);
             }
         }
         REGION_END(update_transition)
