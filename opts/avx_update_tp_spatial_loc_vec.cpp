@@ -375,10 +375,21 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(update_emission)
 
         for(int o = 0; o < M; o += 1){
-            for(int i = 0; i < N; i++) {
-                double denomsi = denoms[i];
-                B[i + (o  )*N] = sum_os[i + o*N]/denomsi;
-                sum_os[i + o*N] = 0;
+            for(int i = 0; i < N; i+=4) {
+                double denomsi0 = denoms[i+0];
+                double denomsi1 = denoms[i+1];
+                double denomsi2 = denoms[i+2];
+                double denomsi3 = denoms[i+3];
+                
+                B[(i+0) + (o  )*N] = sum_os[(i+0) + o*N]/denomsi0;
+                B[(i+1) + (o  )*N] = sum_os[(i+1) + o*N]/denomsi1;
+                B[(i+2) + (o  )*N] = sum_os[(i+2) + o*N]/denomsi2;
+                B[(i+3) + (o  )*N] = sum_os[(i+3) + o*N]/denomsi3;
+
+                sum_os[(i+0) + o*N] = 0;
+                sum_os[(i+1) + o*N] = 0;
+                sum_os[(i+2) + o*N] = 0;
+                sum_os[(i+3) + o*N] = 0;
             }
         }
         REGION_END(update_emission)
