@@ -239,22 +239,67 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             sum_os[(i+2)*M + ot1] += lastaddi2;
             sum_os[(i+3)*M + ot1] += lastaddi3;
 
-            for(int j = 0; j < N; j += 1) {
-                double numi0 = 0.0;
-                double numi1 = 0.0;
-                double numi2 = 0.0;
-                double numi3 = 0.0;
+            for(int j = 0; j < N; j += 4) {
+                double numi0j0 = 0.0;
+                double numi1j0 = 0.0;
+                double numi2j0 = 0.0;
+                double numi3j0 = 0.0;
+
+                double numi0j1 = 0.0;
+                double numi1j1 = 0.0;
+                double numi2j1 = 0.0;
+                double numi3j1 = 0.0;
+
+                double numi0j2 = 0.0;
+                double numi1j2 = 0.0;
+                double numi2j2 = 0.0;
+                double numi3j2 = 0.0;
+
+                double numi0j3 = 0.0;
+                double numi1j3 = 0.0;
+                double numi2j3 = 0.0;
+                double numi3j3 = 0.0;
 
                 for(int t = 0; t < T-1; t+=1) {
-                    numi0 += FW[(i+0) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi1 += FW[(i+1) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi2 += FW[(i+2) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
-                    numi3 += FW[(i+3) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    numi0j0 += FW[(i+0) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    numi1j0 += FW[(i+1) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    numi2j0 += FW[(i+2) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+                    numi3j0 += FW[(i+3) + (t  )*N] * B[(j+0) + O[t+1]*N] * BW[(j+0) + (t+1)*N];
+
+                    numi0j1 += FW[(i+0) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    numi1j1 += FW[(i+1) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    numi2j1 += FW[(i+2) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+                    numi3j1 += FW[(i+3) + (t  )*N] * B[(j+1) + O[t+1]*N] * BW[(j+1) + (t+1)*N];
+
+                    numi0j2 += FW[(i+0) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    numi1j2 += FW[(i+1) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    numi2j2 += FW[(i+2) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+                    numi3j2 += FW[(i+3) + (t  )*N] * B[(j+2) + O[t+1]*N] * BW[(j+2) + (t+1)*N];
+
+                    numi0j3 += FW[(i+0) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    numi1j3 += FW[(i+1) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    numi2j3 += FW[(i+2) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
+                    numi3j3 += FW[(i+3) + (t  )*N] * B[(j+3) + O[t+1]*N] * BW[(j+3) + (t+1)*N];
                 }
-                A[(i+0)*N + (j+0)] = numi0*A[(i+0)*N + (j+0)]/denomi0;
-                A[(i+1)*N + (j+0)] = numi1*A[(i+1)*N + (j+0)]/denomi1;
-                A[(i+2)*N + (j+0)] = numi2*A[(i+2)*N + (j+0)]/denomi2;
-                A[(i+3)*N + (j+0)] = numi3*A[(i+3)*N + (j+0)]/denomi3;
+                A[(i+0)*N + (j+0)] = numi0j0*A[(i+0)*N + (j+0)]/denomi0;
+                A[(i+1)*N + (j+0)] = numi1j0*A[(i+1)*N + (j+0)]/denomi1;
+                A[(i+2)*N + (j+0)] = numi2j0*A[(i+2)*N + (j+0)]/denomi2;
+                A[(i+3)*N + (j+0)] = numi3j0*A[(i+3)*N + (j+0)]/denomi3;
+
+                A[(i+0)*N + (j+1)] = numi0j1*A[(i+0)*N + (j+1)]/denomi0;
+                A[(i+1)*N + (j+1)] = numi1j1*A[(i+1)*N + (j+1)]/denomi1;
+                A[(i+2)*N + (j+1)] = numi2j1*A[(i+2)*N + (j+1)]/denomi2;
+                A[(i+3)*N + (j+1)] = numi3j1*A[(i+3)*N + (j+1)]/denomi3;
+
+                A[(i+0)*N + (j+2)] = numi0j2*A[(i+0)*N + (j+2)]/denomi0;
+                A[(i+1)*N + (j+2)] = numi1j2*A[(i+1)*N + (j+2)]/denomi1;
+                A[(i+2)*N + (j+2)] = numi2j2*A[(i+2)*N + (j+2)]/denomi2;
+                A[(i+3)*N + (j+2)] = numi3j2*A[(i+3)*N + (j+2)]/denomi3;
+
+                A[(i+0)*N + (j+3)] = numi0j3*A[(i+0)*N + (j+3)]/denomi0;
+                A[(i+1)*N + (j+3)] = numi1j3*A[(i+1)*N + (j+3)]/denomi1;
+                A[(i+2)*N + (j+3)] = numi2j3*A[(i+2)*N + (j+3)]/denomi2;
+                A[(i+3)*N + (j+3)] = numi3j3*A[(i+3)*N + (j+3)]/denomi3;
             }
         }
         REGION_END(update_transition)
