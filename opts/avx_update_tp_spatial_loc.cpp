@@ -189,10 +189,10 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             double pi2 = FW[i+2] * BW[i+2] * scales0;
             double pi3 = FW[i+3] * BW[i+3] * scales0;
 
-            sum_os[(i+0)*M + o0] = pi0;
-            sum_os[(i+1)*M + o0] = pi1;
-            sum_os[(i+2)*M + o0] = pi2;
-            sum_os[(i+3)*M + o0] = pi3;
+            sum_os[(i+0) + o0*N] = pi0;
+            sum_os[(i+1) + o0*N] = pi1;
+            sum_os[(i+2) + o0*N] = pi2;
+            sum_os[(i+3) + o0*N] = pi3;
 
             PI[i+0] = pi0;
             PI[i+1] = pi1;
@@ -214,10 +214,10 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 denomi2 += toaddi2;
                 denomi3 += toaddi3;
 
-                sum_os[(i+0)*M + O[t]] += toaddi0;
-                sum_os[(i+1)*M + O[t]] += toaddi1;
-                sum_os[(i+2)*M + O[t]] += toaddi2;
-                sum_os[(i+3)*M + O[t]] += toaddi3;
+                sum_os[(i+0) + O[t]*N] += toaddi0;
+                sum_os[(i+1) + O[t]*N] += toaddi1;
+                sum_os[(i+2) + O[t]*N] += toaddi2;
+                sum_os[(i+3) + O[t]*N] += toaddi3;
             }
             denomi0 += pi0;
             denomi1 += pi1;
@@ -234,10 +234,10 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             denoms[i+2] = denomi2 + lastaddi2;
             denoms[i+3] = denomi3 + lastaddi3;
 
-            sum_os[(i+0)*M + ot1] += lastaddi0;
-            sum_os[(i+1)*M + ot1] += lastaddi1;
-            sum_os[(i+2)*M + ot1] += lastaddi2;
-            sum_os[(i+3)*M + ot1] += lastaddi3;
+            sum_os[(i+0) + ot1*N] += lastaddi0;
+            sum_os[(i+1) + ot1*N] += lastaddi1;
+            sum_os[(i+2) + ot1*N] += lastaddi2;
+            sum_os[(i+3) + ot1*N] += lastaddi3;
 
             for(int j = 0; j < N; j += 4) {
                 double numi0j0 = 0.0;
@@ -309,8 +309,8 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         for(int o = 0; o < M; o += 1){
             for(int i = 0; i < N; i++) {
                 double denomsi = denoms[i];
-                B[i + (o  )*N] = sum_os[i*M + o  ]/denomsi;
-                sum_os[i*M + o] = 0;
+                B[i + (o  )*N] = sum_os[i + o*N]/denomsi;
+                sum_os[i + o*N] = 0;
             }
         }
         REGION_END(update_emission)
