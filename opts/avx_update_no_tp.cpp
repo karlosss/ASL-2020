@@ -490,13 +490,26 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         for(int i = 0; i < N; i++) {
             __m256d vec_denomsi = _mm256_broadcast_sd(denoms+i);
             __m256d zero = _mm256_setzero_pd();
-            for(int o = 0; o < M; o += 4){
-                __m256d sumos = _mm256_loadu_pd(sum_os+i*M+o);
-                __m256d res = _mm256_div_pd(sumos, vec_denomsi);
+            for(int o = 0; o < M; o += 16){
+                __m256d sumos0 = _mm256_loadu_pd(sum_os+i*M+o);
+                __m256d sumos1 = _mm256_loadu_pd(sum_os+i*M+o+4);
+                __m256d sumos2 = _mm256_loadu_pd(sum_os+i*M+o+8);
+                __m256d sumos3 = _mm256_loadu_pd(sum_os+i*M+o+12);
 
-                _mm256_storeu_pd(B+i*M+o, res);
+                __m256d res0 = _mm256_div_pd(sumos0, vec_denomsi);
+                __m256d res1 = _mm256_div_pd(sumos1, vec_denomsi);
+                __m256d res2 = _mm256_div_pd(sumos2, vec_denomsi);
+                __m256d res3 = _mm256_div_pd(sumos3, vec_denomsi);
+
+                _mm256_storeu_pd(B+i*M+o, res0);
+                _mm256_storeu_pd(B+i*M+o+4, res1);
+                _mm256_storeu_pd(B+i*M+o+8, res2);
+                _mm256_storeu_pd(B+i*M+o+12, res3);
 
                 _mm256_storeu_pd(sum_os+i*M+o, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+4, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+8, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+12, zero);
             }
         }
         REGION_END(update_emission)
