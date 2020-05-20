@@ -376,20 +376,25 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         for(int o = 0; o < M; o += 1){
             for(int i = 0; i < N; i+=4) {
-                double denomsi0 = denoms[i+0];
-                double denomsi1 = denoms[i+1];
-                double denomsi2 = denoms[i+2];
-                double denomsi3 = denoms[i+3];
-                
-                B[(i+0) + (o  )*N] = sum_os[(i+0) + o*N]/denomsi0;
-                B[(i+1) + (o  )*N] = sum_os[(i+1) + o*N]/denomsi1;
-                B[(i+2) + (o  )*N] = sum_os[(i+2) + o*N]/denomsi2;
-                B[(i+3) + (o  )*N] = sum_os[(i+3) + o*N]/denomsi3;
+                // double denomsi0 = denoms[i+0];
+                // double denomsi1 = denoms[i+1];
+                // double denomsi2 = denoms[i+2];
+                // double denomsi3 = denoms[i+3];
 
-                sum_os[(i+0) + o*N] = 0;
-                sum_os[(i+1) + o*N] = 0;
-                sum_os[(i+2) + o*N] = 0;
-                sum_os[(i+3) + o*N] = 0;
+                // B[(i+0) + (o  )*N] = sum_os[(i+0) + o*N]/denomsi0;
+                // B[(i+1) + (o  )*N] = sum_os[(i+1) + o*N]/denomsi1;
+                // B[(i+2) + (o  )*N] = sum_os[(i+2) + o*N]/denomsi2;
+                // B[(i+3) + (o  )*N] = sum_os[(i+3) + o*N]/denomsi3;
+
+                // sum_os[(i+0) + o*N] = 0;
+                // sum_os[(i+1) + o*N] = 0;
+                // sum_os[(i+2) + o*N] = 0;
+                // sum_os[(i+3) + o*N] = 0;
+                __m256d denoms_i = _mm256_loadu_pd(&denoms[i]);
+                __m256d sum_os_io = _mm256_loadu_pd(&sum_os[(i+0) + o*N]);
+                
+                _mm256_storeu_pd(&B[(i+0) + (o  )*N], _mm256_div_pd(sum_os_io, denoms_i));
+                _mm256_storeu_pd(&sum_os[(i+0) + o*N], _mm256_setzero_pd());
             }
         }
         REGION_END(update_emission)
