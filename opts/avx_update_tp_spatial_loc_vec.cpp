@@ -183,16 +183,26 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         int ot1 = O[T-1];
 
         for(int i = 0; i < N; i+=4) {
+            __m256d FW_i = _mm256_loadu_pd(&FW[i]);
+            __m256d BW_i = _mm256_loadu_pd(&BW[i]);
+            __m256d scales0_vec = _mm256_set1_pd(scales0);
 
             double pi0 = FW[i+0] * BW[i+0] * scales0;
             double pi1 = FW[i+1] * BW[i+1] * scales0;
             double pi2 = FW[i+2] * BW[i+2] * scales0;
             double pi3 = FW[i+3] * BW[i+3] * scales0;
 
+            __m256d FW_BW_i = _mm256_mul_pd(FW_i, BW_i);
+            __m256d pi_i = _mm256_mul_pd(FW_BW_i, scales0_vec);
+            
+            __m256d sum_os_io0 = _mm256_loadu_pd(&FW[i]);
+
             sum_os[(i+0) + o0*N] = pi0;
             sum_os[(i+1) + o0*N] = pi1;
             sum_os[(i+2) + o0*N] = pi2;
             sum_os[(i+3) + o0*N] = pi3;
+
+
 
             PI[i+0] = pi0;
             PI[i+1] = pi1;
