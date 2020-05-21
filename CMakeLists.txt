@@ -41,3 +41,6 @@ target_link_libraries(avx_update_no_tp LIBS ${PAPI_LIBRARIES})
 
 add_executable(avx_update_tp opts/avx_update_tp.cpp)
 target_link_libraries(avx_update_tp LIBS ${PAPI_LIBRARIES})
+
+add_executable(avx_final opts/avx_final.cpp)
+target_link_libraries(avx_final LIBS ${PAPI_LIBRARIES})
