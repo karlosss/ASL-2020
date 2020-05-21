@@ -406,47 +406,115 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             sum_os[i*M + o0] = pi;
             PI[i] = pi;
 
-//            double denom0 = 0;
-//            double denom1 = 0;
-//            double denom2 = 0;
-//            double denom3 = 0;
+            __m256d avx_denom0 = _mm256_setzero_pd();
+            __m256d avx_denom1 = _mm256_setzero_pd();
+            __m256d avx_denom2 = _mm256_setzero_pd();
+            __m256d avx_denom3 = _mm256_setzero_pd();
 
-            __m256d avx_denom = _mm256_setzero_pd();
+            for(int t = 1; t < T-15; t+=16) {
+                __m256d fwitt0 = _mm256_loadu_pd(FW+i*T+t);
+                __m256d fwitt1 = _mm256_loadu_pd(FW+i*T+t+4);
+                __m256d fwitt2 = _mm256_loadu_pd(FW+i*T+t+8);
+                __m256d fwitt3 = _mm256_loadu_pd(FW+i*T+t+12);
 
-            for(int t = 1; t < T-3; t+=4) {
-                __m256d fwitt = _mm256_loadu_pd(FW+i*T+t);
-                __m256d bwitt = _mm256_loadu_pd(BW+i*T+t);
-                __m256d sct = _mm256_loadu_pd(scales+t);
+                __m256d bwitt0 = _mm256_loadu_pd(BW+i*T+t);
+                __m256d bwitt1 = _mm256_loadu_pd(BW+i*T+t+4);
+                __m256d bwitt2 = _mm256_loadu_pd(BW+i*T+t+8);
+                __m256d bwitt3 = _mm256_loadu_pd(BW+i*T+t+12);
 
-                __m256d toadd = _mm256_mul_pd(fwitt, bwitt);
-                toadd = _mm256_mul_pd(toadd, sct);
+                __m256d sct0 = _mm256_loadu_pd(scales+t);
+                __m256d sct1 = _mm256_loadu_pd(scales+t+4);
+                __m256d sct2 = _mm256_loadu_pd(scales+t+8);
+                __m256d sct3 = _mm256_loadu_pd(scales+t+12);
 
-//                double toadd0 = FW[i*T + t] * BW[i*T + t] * scales[t];
-//                double toadd1 = FW[i*T + t+1] * BW[i*T + t+1] * scales[t+1];
-//                double toadd2 = FW[i*T + t+2] * BW[i*T + t+2] * scales[t+2];
-//                double toadd3 = FW[i*T + t+3] * BW[i*T + t+3] * scales[t+3];
+                __m256d toadd0 = _mm256_mul_pd(fwitt0, bwitt0);
+                __m256d toadd1 = _mm256_mul_pd(fwitt1, bwitt1);
+                __m256d toadd2 = _mm256_mul_pd(fwitt2, bwitt2);
+                __m256d toadd3 = _mm256_mul_pd(fwitt3, bwitt3);
 
-                avx_denom = _mm256_add_pd(avx_denom, toadd);
+                toadd0 = _mm256_mul_pd(toadd0, sct0);
+                toadd1 = _mm256_mul_pd(toadd1, sct1);
+                toadd2 = _mm256_mul_pd(toadd2, sct2);
+                toadd3 = _mm256_mul_pd(toadd3, sct3);
 
-                sum_os[i*M + O[t]] += ((double *)&toadd)[0];
-                sum_os[i*M + O[t+1]] += ((double *)&toadd)[1];
-                sum_os[i*M + O[t+2]] += ((double *)&toadd)[2];
-                sum_os[i*M + O[t+3]] += ((double *)&toadd)[3];
+                avx_denom0 = _mm256_add_pd(avx_denom0, toadd0);
+                avx_denom1 = _mm256_add_pd(avx_denom1, toadd1);
+                avx_denom2 = _mm256_add_pd(avx_denom2, toadd2);
+                avx_denom3 = _mm256_add_pd(avx_denom3, toadd3);
+
+                sum_os[i*M + O[t]] += ((double *)&toadd0)[0];
+                sum_os[i*M + O[t+1]] += ((double *)&toadd0)[1];
+                sum_os[i*M + O[t+2]] += ((double *)&toadd0)[2];
+                sum_os[i*M + O[t+3]] += ((double *)&toadd0)[3];
+
+                sum_os[i*M + O[t+4]] += ((double *)&toadd1)[0];
+                sum_os[i*M + O[t+5]] += ((double *)&toadd1)[1];
+                sum_os[i*M + O[t+6]] += ((double *)&toadd1)[2];
+                sum_os[i*M + O[t+7]] += ((double *)&toadd1)[3];
+
+                sum_os[i*M + O[t+8]] += ((double *)&toadd2)[0];
+                sum_os[i*M + O[t+9]] += ((double *)&toadd2)[1];
+                sum_os[i*M + O[t+10]] += ((double *)&toadd2)[2];
+                sum_os[i*M + O[t+11]] += ((double *)&toadd2)[3];
+
+                sum_os[i*M + O[t+12]] += ((double *)&toadd3)[0];
+                sum_os[i*M + O[t+13]] += ((double *)&toadd3)[1];
+                sum_os[i*M + O[t+14]] += ((double *)&toadd3)[2];
+                sum_os[i*M + O[t+15]] += ((double *)&toadd3)[3];
             }
 
-            // leftover 2 iterations
-            __m128d fwitt = _mm_loadu_pd(FW+i*T+T-3);
-            __m128d bwitt = _mm_loadu_pd(BW+i*T+T-3);
-            __m128d sct = _mm_loadu_pd(scales+T-3);
+            // leftover 14 iterations
+            __m256d fwitt0 = _mm256_loadu_pd(FW+i*T+T-15);
+            __m256d fwitt1 = _mm256_loadu_pd(FW+i*T+T-11);
+            __m256d fwitt2 = _mm256_loadu_pd(FW+i*T+T-7);
+            __m128d fwittR = _mm_loadu_pd(FW+i*T+T-3);
 
-            __m128d toadd = _mm_mul_pd(fwitt, bwitt);
-            toadd = _mm_mul_pd(toadd, sct);
-            __m256d xx = _mm256_set_m128d(toadd, _mm_setzero_pd());
+            __m256d bwitt0 = _mm256_loadu_pd(BW+i*T+T-15);
+            __m256d bwitt1 = _mm256_loadu_pd(BW+i*T+T-11);
+            __m256d bwitt2 = _mm256_loadu_pd(BW+i*T+T-7);
+            __m128d bwittR = _mm_loadu_pd(BW+i*T+T-3);
 
-            avx_denom = _mm256_add_pd(avx_denom, xx);
+            __m256d sct0 = _mm256_loadu_pd(scales+T-15);
+            __m256d sct1 = _mm256_loadu_pd(scales+T-11);
+            __m256d sct2 = _mm256_loadu_pd(scales+T-7);
+            __m128d sctR = _mm_loadu_pd(scales+T-3);
 
-            sum_os[i*M + ot3] += ((double *)&xx)[2];
-            sum_os[i*M + ot2] += ((double *)&xx)[3];
+            __m256d toadd0 = _mm256_mul_pd(fwitt0, bwitt0);
+            __m256d toadd1 = _mm256_mul_pd(fwitt1, bwitt1);
+            __m256d toadd2 = _mm256_mul_pd(fwitt2, bwitt2);
+            __m128d toaddR = _mm_mul_pd(fwittR, bwittR);
+
+            toadd0 = _mm256_mul_pd(toadd0, sct0);
+            toadd1 = _mm256_mul_pd(toadd1, sct1);
+            toadd2 = _mm256_mul_pd(toadd2, sct2);
+            toaddR = _mm_mul_pd(toaddR, sctR);
+
+            __m256d R = _mm256_set_m128d(toaddR, _mm_setzero_pd());
+
+            avx_denom0 = _mm256_add_pd(avx_denom0, toadd0);
+            avx_denom1 = _mm256_add_pd(avx_denom1, toadd1);
+            avx_denom2 = _mm256_add_pd(avx_denom2, toadd2);
+            avx_denom3 = _mm256_add_pd(avx_denom3, R);
+
+            sum_os[i*M + O[T-15]] += ((double *)&toadd0)[0];
+            sum_os[i*M + O[T-14]] += ((double *)&toadd0)[1];
+            sum_os[i*M + O[T-13]] += ((double *)&toadd0)[2];
+            sum_os[i*M + O[T-12]] += ((double *)&toadd0)[3];
+
+            sum_os[i*M + O[T-11]] += ((double *)&toadd1)[0];
+            sum_os[i*M + O[T-10]] += ((double *)&toadd1)[1];
+            sum_os[i*M + O[T-9]] += ((double *)&toadd1)[2];
+            sum_os[i*M + O[T-8]] += ((double *)&toadd1)[3];
+
+            sum_os[i*M + O[T-7]] += ((double *)&toadd2)[0];
+            sum_os[i*M + O[T-6]] += ((double *)&toadd2)[1];
+            sum_os[i*M + O[T-5]] += ((double *)&toadd2)[2];
+            sum_os[i*M + O[T-4]] += ((double *)&toadd2)[3];
+
+            sum_os[i*M + O[T-3]] += ((double *)&R)[2];
+            sum_os[i*M + O[T-2]] += ((double *)&R)[3];
+
+            __m256d avx_denom = _mm256_add_pd(_mm256_add_pd(avx_denom0, avx_denom1), _mm256_add_pd(avx_denom2, avx_denom3));
 
             avx_denom = _mm256_hadd_pd(avx_denom, _mm256_permute2f128_pd(avx_denom, avx_denom, 1));
             avx_denom = _mm256_hadd_pd(avx_denom, avx_denom);
