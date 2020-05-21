@@ -44,3 +44,6 @@ target_link_libraries(avx_update_tp LIBS ${PAPI_LIBRARIES})
 
 add_executable(avx_final opts/avx_final.cpp)
 target_link_libraries(avx_final LIBS ${PAPI_LIBRARIES})
+
+add_executable(avx_final_inverted_denoms opts/avx_final_inverted_denoms.cpp)
+target_link_libraries(avx_final_inverted_denoms LIBS ${PAPI_LIBRARIES})
