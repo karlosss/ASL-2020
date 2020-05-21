@@ -1,6 +1,45 @@
 #include <bits/stdc++.h>
 #include "common.h"
 #include <immintrin.h>
+#include <assert.h>
+
+void compvec(__m256d vec, double a, double b, double c, double d){
+    if(
+            ((double *)&vec)[0] == a &&
+            ((double *)&vec)[1] == b &&
+            ((double *)&vec)[2] == c &&
+            ((double *)&vec)[3] == d){
+
+    }
+    else{
+        std::cout << "ERROR m256d!\n";
+    }
+}
+
+void compvec(__m128d vec, double a, double b){
+    if(
+            ((double *)&vec)[0] == a &&
+            ((double *)&vec)[1] == b){
+
+    }
+    else{
+        std::cout << "ERROR m128d!\n";
+    }
+}
+
+
+void compvec(__m128i vec, int a, int b, int c, int d){
+    if(
+            ((int *)&vec)[0] == a &&
+            ((int *)&vec)[1] == b &&
+            ((int *)&vec)[2] == c &&
+            ((int *)&vec)[3] == d){
+
+    }
+    else{
+        std::cout << "ERROR m128i!\n";
+    }
+}
 
 size_t flop_count(int N, int M, int T, int n_iter){
     size_t add = 0;
@@ -55,7 +94,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
     double* sum_os = scales + T;
     double* denoms = sum_os + M*N;
     init_zero(sum_os, M*N);
-    
+
     REGION_BEGIN(baum_welch)
     //unroll factor and clean up var
     int unroll_n_outer = 16;
@@ -69,7 +108,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         //constant offset vectors
         __m256d zero_vec = _mm256_setzero_pd();
         //__m256i gather_N = _mm256_set_epi64x(3*N, 2*N, N, 0);
-        __m256i gather_T = _mm256_set_epi64x(3*T, 2*T, T, 0);        
+        __m256i gather_T = _mm256_set_epi64x(3*T, 2*T, T, 0);
         __m256i gather_M = _mm256_set_epi64x(3*M, 2*M, M, 0);
         __m256i B_offset = _mm256_set_epi64x(4*M, 4*M, 4*M, 4*M);
         __m256d scale_vec = _mm256_setzero_pd();
@@ -80,7 +119,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         for(int i = 0; i < N; i+=unroll_n_inner) {
 
             pi_vec = _mm256_loadu_pd(PI+i);
-            b_vec = _mm256_i64gather_pd(B+i*M+O[0], gather_M, 8);
+            b_vec = _mm256_i64gather_pd(B+i*M+o0, gather_M, 8);
             forward_vec = _mm256_mul_pd(pi_vec, b_vec);
             scale_vec = _mm256_add_pd(scale_vec, forward_vec);
 
@@ -94,13 +133,13 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         __m256d sum0 = _mm256_unpacklo_pd(scale_vec, zero_vec);
         __m256d sum1 = _mm256_unpackhi_pd(scale_vec, zero_vec);
-        sum0 = _mm256_add_pd(sum0, sum1); 
+        sum0 = _mm256_add_pd(sum0, sum1);
         __m128d top = _mm256_extractf128_pd(sum0, 1);
         sum1 = _mm256_insertf128_pd(zero_vec, top, 0);
         sum0 = _mm256_add_pd(sum0, sum1);
-        
+
         scale = ((double *)&sum0)[0];
-        
+
         // Scale timestep 0
         C[0] = 1./scale;
         scales[0] = scale;
@@ -109,7 +148,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         //scalar replace C[0] (decide wheter to load or calculate again)
         //double C0 = C[0];
-        __m256d c_vec = _mm256_set1_pd(C[0]);
+        __m256d c_vec = _mm256_set1_pd(c0);
         for(int i = 0; i < N; i+=unroll_n_inner) {
             forward_vec = _mm256_i64gather_pd(FW+i*T, gather_T, 8);
             forward_vec = _mm256_mul_pd(forward_vec, c_vec);
@@ -131,7 +170,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             __m256d scale0 = _mm256_setzero_pd();
             __m256d scale1 = _mm256_setzero_pd();
             for(int i = 0; i < N; i+=unroll_n_outer) {
-                
+
                 //4 times due to outer unroll
                 //scalar replace FW[i*T+t]
                 __m256d a_vec0, a_vec1, a_vec2, a_vec3;
@@ -199,9 +238,9 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                     a_vec3 = _mm256_loadu_pd(A+jNi3+12);
                     acc3 = _mm256_fmadd_pd(forward_3, a_vec3, acc3);
                     //////////////////////////////////////////////
-   
+
                 }
-                
+
                 //move multiplication post loop
                 //strength reduce
                 int iMOt = i*M+Ot;
@@ -226,14 +265,14 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
                 __m256d sum0 = _mm256_unpacklo_pd(scale0, zero_vec);
                 __m256d sum1 = _mm256_unpackhi_pd(scale0, zero_vec);
-                sum0 = _mm256_add_pd(sum0, sum1); 
+                sum0 = _mm256_add_pd(sum0, sum1);
                 __m128d top = _mm256_extractf128_pd(sum0, 1);
                 sum1 = _mm256_insertf128_pd(zero_vec, top, 0);
                 sum0 = _mm256_add_pd(sum0, sum1);
-        
+
                 scale += ((double *)&sum0)[0];
 
-                
+
                 //revert scalar replace
                 //strenght reduce
                 int iTt = i*T+t;
@@ -265,12 +304,13 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 _mm_storeh_pd(FW + iTt+13*T, first_half);
                 _mm_storel_pd(FW + iTt+14*T, second_half);
                 _mm_storeh_pd(FW + iTt+15*T, second_half);
-      
+
             }
-            
-            C[t] = 1./scale;
+
+            double ct = 1./scale;
+            C[t] = ct;
             scales[t] = scale;
-            c_vec = _mm256_set1_pd(C[t]);
+            c_vec = _mm256_set1_pd(ct);
 
             for(int i = 0; i < N; i+=unroll_n_inner) {
 
@@ -304,7 +344,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 __m256d accum1 = _mm256_setzero_pd();
                 __m256d accum2 = _mm256_setzero_pd();
                 __m256d accum3 = _mm256_setzero_pd();
-                
+
                 for(int j = 0; j < limit; j+=4) {
                     __m256i idx = _mm256_set_epi64x(3*N,2*N, N, 0);
 
@@ -313,7 +353,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                     __m256d A0 = _mm256_i64gather_pd(A + i*N + j, idx, 8);
                     __m256d mul0 = _mm256_mul_pd(BW0, B0);
                     accum0 = _mm256_fmadd_pd(A0, mul0, accum0);
-                    
+
                     __m256d BW1 = _mm256_set1_pd(BW[(j+1)*T + t+1]);
                     __m256d B1 = _mm256_set1_pd(B[(j+1)*M + obs]);
                     __m256d A1 = _mm256_i64gather_pd(A + i*N + j+1, idx, 8);
@@ -337,7 +377,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 __m256d res1 = _mm256_add_pd(accum2, accum3);
                 __m256d res2 = _mm256_add_pd(res0, res1);
                 __m256d result = _mm256_mul_pd(c_t, res2);
-                
+
                 __m128d first_half = _mm256_extractf128_pd(result, 0);
                 __m128d second_half = _mm256_extractf128_pd(result, 1);
                 _mm_storel_pd(BW + i*T + t, first_half);
@@ -366,63 +406,149 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             sum_os[i*M + o0] = pi;
             PI[i] = pi;
 
-            double denom0 = 0;
-            double denom1 = 0;
-            double denom2 = 0;
-            double denom3 = 0;
+            __m256d avx_denom0 = _mm256_setzero_pd();
+            __m256d avx_denom1 = _mm256_setzero_pd();
+            __m256d avx_denom2 = _mm256_setzero_pd();
+            __m256d avx_denom3 = _mm256_setzero_pd();
 
-            for(int t = 1; t < T-3; t+=4) {
-                double toadd0 = FW[i*T + t] * BW[i*T + t] * scales[t];
-                double toadd1 = FW[i*T + t+1] * BW[i*T + t+1] * scales[t+1];
-                double toadd2 = FW[i*T + t+2] * BW[i*T + t+2] * scales[t+2];
-                double toadd3 = FW[i*T + t+3] * BW[i*T + t+3] * scales[t+3];
+            for(int t = 1; t < T-15; t+=16) {
+                __m256d fwitt0 = _mm256_loadu_pd(FW+i*T+t);
+                __m256d fwitt1 = _mm256_loadu_pd(FW+i*T+t+4);
+                __m256d fwitt2 = _mm256_loadu_pd(FW+i*T+t+8);
+                __m256d fwitt3 = _mm256_loadu_pd(FW+i*T+t+12);
 
-                denom0 += toadd0;
-                denom1 += toadd1;
-                denom2 += toadd2;
-                denom3 += toadd3;
+                __m256d bwitt0 = _mm256_loadu_pd(BW+i*T+t);
+                __m256d bwitt1 = _mm256_loadu_pd(BW+i*T+t+4);
+                __m256d bwitt2 = _mm256_loadu_pd(BW+i*T+t+8);
+                __m256d bwitt3 = _mm256_loadu_pd(BW+i*T+t+12);
 
-                sum_os[i*M + O[t]] += toadd0;
-                sum_os[i*M + O[t+1]] += toadd1;
-                sum_os[i*M + O[t+2]] += toadd2;
-                sum_os[i*M + O[t+3]] += toadd3;
+                __m256d sct0 = _mm256_loadu_pd(scales+t);
+                __m256d sct1 = _mm256_loadu_pd(scales+t+4);
+                __m256d sct2 = _mm256_loadu_pd(scales+t+8);
+                __m256d sct3 = _mm256_loadu_pd(scales+t+12);
+
+                __m256d toadd0 = _mm256_mul_pd(fwitt0, bwitt0);
+                __m256d toadd1 = _mm256_mul_pd(fwitt1, bwitt1);
+                __m256d toadd2 = _mm256_mul_pd(fwitt2, bwitt2);
+                __m256d toadd3 = _mm256_mul_pd(fwitt3, bwitt3);
+
+                toadd0 = _mm256_mul_pd(toadd0, sct0);
+                toadd1 = _mm256_mul_pd(toadd1, sct1);
+                toadd2 = _mm256_mul_pd(toadd2, sct2);
+                toadd3 = _mm256_mul_pd(toadd3, sct3);
+
+                avx_denom0 = _mm256_add_pd(avx_denom0, toadd0);
+                avx_denom1 = _mm256_add_pd(avx_denom1, toadd1);
+                avx_denom2 = _mm256_add_pd(avx_denom2, toadd2);
+                avx_denom3 = _mm256_add_pd(avx_denom3, toadd3);
+
+                sum_os[i*M + O[t]] += ((double *)&toadd0)[0];
+                sum_os[i*M + O[t+1]] += ((double *)&toadd0)[1];
+                sum_os[i*M + O[t+2]] += ((double *)&toadd0)[2];
+                sum_os[i*M + O[t+3]] += ((double *)&toadd0)[3];
+
+                sum_os[i*M + O[t+4]] += ((double *)&toadd1)[0];
+                sum_os[i*M + O[t+5]] += ((double *)&toadd1)[1];
+                sum_os[i*M + O[t+6]] += ((double *)&toadd1)[2];
+                sum_os[i*M + O[t+7]] += ((double *)&toadd1)[3];
+
+                sum_os[i*M + O[t+8]] += ((double *)&toadd2)[0];
+                sum_os[i*M + O[t+9]] += ((double *)&toadd2)[1];
+                sum_os[i*M + O[t+10]] += ((double *)&toadd2)[2];
+                sum_os[i*M + O[t+11]] += ((double *)&toadd2)[3];
+
+                sum_os[i*M + O[t+12]] += ((double *)&toadd3)[0];
+                sum_os[i*M + O[t+13]] += ((double *)&toadd3)[1];
+                sum_os[i*M + O[t+14]] += ((double *)&toadd3)[2];
+                sum_os[i*M + O[t+15]] += ((double *)&toadd3)[3];
             }
 
-            // leftover 2 iterations
-            double toadd0 = FW[i*T + T-3] * BW[i*T + T-3] * scales[T-3];
-            double toadd1 = FW[i*T + T-2] * BW[i*T + T-2] * scales[T-2];
+            // leftover 14 iterations
+            __m256d fwitt0 = _mm256_loadu_pd(FW+i*T+T-15);
+            __m256d fwitt1 = _mm256_loadu_pd(FW+i*T+T-11);
+            __m256d fwitt2 = _mm256_loadu_pd(FW+i*T+T-7);
+            __m128d fwittR = _mm_loadu_pd(FW+i*T+T-3);
 
-            denom0 += toadd0;
-            denom1 += toadd1;
+            __m256d bwitt0 = _mm256_loadu_pd(BW+i*T+T-15);
+            __m256d bwitt1 = _mm256_loadu_pd(BW+i*T+T-11);
+            __m256d bwitt2 = _mm256_loadu_pd(BW+i*T+T-7);
+            __m128d bwittR = _mm_loadu_pd(BW+i*T+T-3);
 
-            sum_os[i*M + ot3] += toadd0;
-            sum_os[i*M + ot2] += toadd1;
+            __m256d sct0 = _mm256_loadu_pd(scales+T-15);
+            __m256d sct1 = _mm256_loadu_pd(scales+T-11);
+            __m256d sct2 = _mm256_loadu_pd(scales+T-7);
+            __m128d sctR = _mm_loadu_pd(scales+T-3);
 
-            double denom = denom0+denom1+denom2+denom3+pi;
+            __m256d toadd0 = _mm256_mul_pd(fwitt0, bwitt0);
+            __m256d toadd1 = _mm256_mul_pd(fwitt1, bwitt1);
+            __m256d toadd2 = _mm256_mul_pd(fwitt2, bwitt2);
+            __m128d toaddR = _mm_mul_pd(fwittR, bwittR);
+
+            toadd0 = _mm256_mul_pd(toadd0, sct0);
+            toadd1 = _mm256_mul_pd(toadd1, sct1);
+            toadd2 = _mm256_mul_pd(toadd2, sct2);
+            toaddR = _mm_mul_pd(toaddR, sctR);
+
+            __m256d R = _mm256_set_m128d(toaddR, _mm_setzero_pd());
+
+            avx_denom0 = _mm256_add_pd(avx_denom0, toadd0);
+            avx_denom1 = _mm256_add_pd(avx_denom1, toadd1);
+            avx_denom2 = _mm256_add_pd(avx_denom2, toadd2);
+            avx_denom3 = _mm256_add_pd(avx_denom3, R);
+
+            sum_os[i*M + O[T-15]] += ((double *)&toadd0)[0];
+            sum_os[i*M + O[T-14]] += ((double *)&toadd0)[1];
+            sum_os[i*M + O[T-13]] += ((double *)&toadd0)[2];
+            sum_os[i*M + O[T-12]] += ((double *)&toadd0)[3];
+
+            sum_os[i*M + O[T-11]] += ((double *)&toadd1)[0];
+            sum_os[i*M + O[T-10]] += ((double *)&toadd1)[1];
+            sum_os[i*M + O[T-9]] += ((double *)&toadd1)[2];
+            sum_os[i*M + O[T-8]] += ((double *)&toadd1)[3];
+
+            sum_os[i*M + O[T-7]] += ((double *)&toadd2)[0];
+            sum_os[i*M + O[T-6]] += ((double *)&toadd2)[1];
+            sum_os[i*M + O[T-5]] += ((double *)&toadd2)[2];
+            sum_os[i*M + O[T-4]] += ((double *)&toadd2)[3];
+
+            sum_os[i*M + O[T-3]] += ((double *)&R)[2];
+            sum_os[i*M + O[T-2]] += ((double *)&R)[3];
+
+            __m256d avx_denom = _mm256_add_pd(_mm256_add_pd(avx_denom0, avx_denom1), _mm256_add_pd(avx_denom2, avx_denom3));
+
+            avx_denom = _mm256_hadd_pd(avx_denom, _mm256_permute2f128_pd(avx_denom, avx_denom, 1));
+            avx_denom = _mm256_hadd_pd(avx_denom, avx_denom);
+            double denom = _mm_cvtsd_f64(_mm256_castpd256_pd128(avx_denom)) + pi;
 
             double lastadd = FW[i*T + T-1] * BW[i*T + T-1] * scalest1;
             denoms[i] = denom + lastadd;
             sum_os[i*M + ot1] += lastadd;
 
             for(int j = 0; j < N; j++) {
-                double num0 = 0.;
-                double num1 = 0.;
-                double num2 = 0.;
-                double num3 = 0.;
+                __m256d num = _mm256_setzero_pd();
 
                 for(int t = 0; t < T-4; t+=4) {
-                    num0 += FW[i*T + t] * B[j*M + O[t+1]] * BW[j*T + t+1];
-                    num1 += FW[i*T + t+1] * B[j*M + O[t+2]] * BW[j*T + t+2];
-                    num2 += FW[i*T + t+2] * B[j*M + O[t+3]] * BW[j*T + t+3];
-                    num3 += FW[i*T + t+3] * B[j*M + O[t+4]] * BW[j*T + t+4];
+                    __m256d fw = _mm256_loadu_pd(FW+i*T+t);
+                    __m256d bw = _mm256_loadu_pd(BW+j*T+t+1);
+                    __m256d b = _mm256_set_pd(B[j*M + O[t+4]], B[j*M + O[t+3]], B[j*M + O[t+2]], B[j*M + O[t+1]]);
+
+                    __m256d mul = _mm256_mul_pd(fw, bw);
+                    mul = _mm256_mul_pd(b, mul);
+
+                    num = _mm256_add_pd(num, mul);
                 }
 
-                num0 += FW[i*T + T-4] * B[j*M + ot3] * BW[j*T + T-3];
-                num1 += FW[i*T + T-3] * B[j*M + ot2] * BW[j*T + T-2];
-                num2 += FW[i*T + T-2] * B[j*M + ot1] * BW[j*T + T-1];
+                double num0 = FW[i*T + T-4] * B[j*M + ot3] * BW[j*T + T-3];
+                double num1 = FW[i*T + T-3] * B[j*M + ot2] * BW[j*T + T-2];
+                double num2 = FW[i*T + T-2] * B[j*M + ot1] * BW[j*T + T-1];
 
-                double num = (num0+num1+num2+num3)*A[i*N + j];
-                A[i*N + j] = num/denom;
+                num = _mm256_hadd_pd(num, _mm256_permute2f128_pd(num, num, 1));
+                num = _mm256_hadd_pd(num, num);
+
+                double num_d = _mm_cvtsd_f64(_mm256_castpd256_pd128(num)) + num0 + num1 + num2;
+                num_d *= A[i*N+j];
+
+                A[i*N + j] = num_d/denom;
             }
         }
         REGION_END(update_transition)
@@ -430,17 +556,28 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(update_emission)
         // update the State Emission probabilities
         for(int i = 0; i < N; i++) {
-            double denomsi = denoms[i];
-            for(int o = 0; o < M; o += 4){
-                B[i*M + o] = sum_os[i*M + o]/denomsi;
-                B[i*M + o+1] = sum_os[i*M + o+1]/denomsi;
-                B[i*M + o+2] = sum_os[i*M + o+2]/denomsi;
-                B[i*M + o+3] = sum_os[i*M + o+3]/denomsi;
+            __m256d vec_denomsi = _mm256_broadcast_sd(denoms+i);
+            __m256d zero = _mm256_setzero_pd();
+            for(int o = 0; o < M; o += 16){
+                __m256d sumos0 = _mm256_loadu_pd(sum_os+i*M+o);
+                __m256d sumos1 = _mm256_loadu_pd(sum_os+i*M+o+4);
+                __m256d sumos2 = _mm256_loadu_pd(sum_os+i*M+o+8);
+                __m256d sumos3 = _mm256_loadu_pd(sum_os+i*M+o+12);
 
-                sum_os[i*M + o] = 0;
-                sum_os[i*M + o+1] = 0;
-                sum_os[i*M + o+2] = 0;
-                sum_os[i*M + o+3] = 0;
+                __m256d res0 = _mm256_div_pd(sumos0, vec_denomsi);
+                __m256d res1 = _mm256_div_pd(sumos1, vec_denomsi);
+                __m256d res2 = _mm256_div_pd(sumos2, vec_denomsi);
+                __m256d res3 = _mm256_div_pd(sumos3, vec_denomsi);
+
+                _mm256_storeu_pd(B+i*M+o, res0);
+                _mm256_storeu_pd(B+i*M+o+4, res1);
+                _mm256_storeu_pd(B+i*M+o+8, res2);
+                _mm256_storeu_pd(B+i*M+o+12, res3);
+
+                _mm256_storeu_pd(sum_os+i*M+o, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+4, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+8, zero);
+                _mm256_storeu_pd(sum_os+i*M+o+12, zero);
             }
         }
         REGION_END(update_emission)
