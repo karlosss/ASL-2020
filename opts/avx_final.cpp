@@ -79,24 +79,21 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         int o0 = O[0];
         for(int i = 0; i < N-3; i+=4) {
             __m256d pi_vec = _mm256_loadu_pd(PI + i);
-            __m256d b_vec = _mm256_loadu_pd(B + O[0]*N + i);
+            __m256d b_vec = _mm256_loadu_pd(B + o0*N + i);
             __m256d result = _mm256_mul_pd(pi_vec, b_vec);
             _mm256_storeu_pd(FW + 0*N + i, result);
             scale_vec0 = _mm256_add_pd(scale_vec0, result);
         }
-        __m128d scale_low0 = _mm256_castpd256_pd128(scale_vec0);
-        __m128d scale_high0 = _mm256_extractf128_pd(scale_vec0, 1);
-        __m128d scale_sum0 = _mm_add_pd(scale_low0, scale_high0);
-        __m128d get_high0 = _mm_unpackhi_pd(scale_sum0, scale_sum0);
-        double scale0 = _mm_cvtsd_f64(_mm_add_pd(scale_sum0, get_high0));
+
+        scale_vec0 = _mm256_hadd_pd(scale_vec0, _mm256_permute2f128_pd(scale_vec0, scale_vec0, 1));
+        scale_vec0 = _mm256_hadd_pd(scale_vec0, scale_vec0);
+        double scale0 = _mm_cvtsd_f64(_mm256_castpd256_pd128(scale_vec0));
         // Scale timestep 0
 
         C[0] = 1./scale0;
-        double c0 = 1./scale0;
         scales[0] = scale0;
-        double scales0 = scale0;
 
-        __m256d c_0 = _mm256_set1_pd(C[0]);
+        __m256d c_0 = _mm256_broadcast_sd(&C[0]);
         for(int i = 0; i < N-3; i+=4) {
             __m256d fw_vec = _mm256_loadu_pd(FW + 0*N + i);
             __m256d result = _mm256_mul_pd(fw_vec, c_0);
@@ -109,31 +106,49 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
             for(int i = 0; i < N-3; i+=4) {
                 __m256d accum0 = _mm256_setzero_pd();
+                __m256d accum1 = _mm256_setzero_pd();
+                __m256d accum2 = _mm256_setzero_pd();
+                __m256d accum3 = _mm256_setzero_pd();
 
-                for(int j = 0; j < N; j++) {
+                for(int j = 0; j < N-3; j+=4) {
 
-                    __m256d fw_vec0 = _mm256_set1_pd(FW[(t-1)*N + j]);
+                    __m256d fw_vec0 = _mm256_broadcast_sd(&FW[(t-1)*N + j]);
                     __m256d a_vec0 = _mm256_loadu_pd(A + j*N + i);
                     accum0 = _mm256_fmadd_pd(fw_vec0, a_vec0, accum0);
 
+                    __m256d fw_vec1 = _mm256_broadcast_sd(&FW[(t-1)*N + j+1]);
+                    __m256d a_vec1 = _mm256_loadu_pd(A + (j+1)*N + i);
+                    accum1 = _mm256_fmadd_pd(fw_vec1, a_vec1, accum1);
+
+                    __m256d fw_vec2 = _mm256_broadcast_sd(&FW[(t-1)*N + j+2]);
+                    __m256d a_vec2 = _mm256_loadu_pd(A + (j+2)*N + i);
+                    accum2 = _mm256_fmadd_pd(fw_vec2, a_vec2, accum2);
+
+                    __m256d fw_vec3 = _mm256_broadcast_sd(&FW[(t-1)*N + j+3]);
+                    __m256d a_vec3 = _mm256_loadu_pd(A + (j+3)*N + i);
+                    accum3 = _mm256_fmadd_pd(fw_vec3, a_vec3, accum3);
+
                 }
+                __m256d sum0 = _mm256_add_pd(accum0, accum1);
+                __m256d sum1 = _mm256_add_pd(accum2, accum3);
+                __m256d sum2 = _mm256_add_pd(sum0, sum1);
                 __m256d b_vec = _mm256_loadu_pd(B + obs*N + i);
-                __m256d result = _mm256_mul_pd(accum0, b_vec);
+                __m256d result = _mm256_mul_pd(sum2, b_vec);
                 scale_vec = _mm256_add_pd(result, scale_vec);
                 _mm256_storeu_pd(FW + t*N + i, result);
             }
 
-            __m128d scale_low = _mm256_castpd256_pd128(scale_vec);
-            __m128d scale_high = _mm256_extractf128_pd(scale_vec, 1);
-            __m128d scale_sum = _mm_add_pd(scale_low, scale_high);
-            __m128d get_high = _mm_unpackhi_pd(scale_sum, scale_sum);
-            double scale = _mm_cvtsd_f64(_mm_add_pd(scale_sum, get_high));
+            scale_vec = _mm256_hadd_pd(scale_vec, _mm256_permute2f128_pd(scale_vec, scale_vec, 1));
+            scale_vec = _mm256_hadd_pd(scale_vec, scale_vec);
+            double scale = _mm_cvtsd_f64(_mm256_castpd256_pd128(scale_vec));
 
             C[t] = 1./scale;
             scales[t] = scale;
-
-            for(int i = 0; i < N; i++) {
-                FW[t*N + i]*= C[t];
+            __m256d c_t = _mm256_broadcast_sd(&C[t]);
+            for(int i = 0; i < N; i+=4) {
+                __m256d fw_vec = _mm256_loadu_pd(FW + t*N + i);
+                __m256d result = _mm256_mul_pd(fw_vec, c_t);
+                _mm256_storeu_pd(FW + t*N + i, result);
             }
         }
 
@@ -141,7 +156,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         REGION_BEGIN(backward_vars)
         // Calculate the Backward trellis (scaled)
-        __m256d bw_c_t_1 = _mm256_set1_pd(C[T-1]);
+        __m256d bw_c_t_1 = _mm256_broadcast_sd(&C[T-1]);
         for(int i = 0; i < N-3; i+= 4) {
             _mm256_storeu_pd(BW + (T-1)*N + i, bw_c_t_1);
         }
@@ -177,7 +192,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 __m256d blend = _mm256_blend_pd(hadd0, hadd1, 0xC);
                 __m256d permute = _mm256_permute2f128_pd(hadd0, hadd1, 0x21);
                 __m256d sum = _mm256_add_pd(blend, permute);
-                __m256d c_t = _mm256_set1_pd(C[t]);
+                __m256d c_t = _mm256_broadcast_sd(&C[t]);
                 __m256d result = _mm256_mul_pd(c_t,sum);
                 _mm256_storeu_pd(BW + t*N + i, result);
             }
@@ -193,7 +208,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         double scalest1 = scales[T-1];
         int ot1 = O[T-1];
 
-        __m256d vec_scales0 = _mm256_set1_pd(scales0);
+        __m256d vec_scales0 = _mm256_set1_pd(scale0);
 
         for(int i = 0; i < N; i+=8) {
             __m256d vec_fw0 = _mm256_loadu_pd(FW+i);
