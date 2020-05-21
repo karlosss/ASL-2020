@@ -278,6 +278,20 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
             _mm256_storeu_pd(sum_os + ot1*N + i, _mm256_fmadd_pd(vec_lastadd0, vec_scalest1, vec_sumos0));
             _mm256_storeu_pd(sum_os + ot1*N + i+4, _mm256_fmadd_pd(vec_lastadd1, vec_scalest1, vec_sumos1));
 
+            __m256d t1 = _mm256_permute2f128_pd(vec_denomi0, vec_denomi0, 0x0);
+            __m256d t2 = _mm256_permute2f128_pd(vec_denomi0, vec_denomi0, 0x11);
+            __m256d bc_denomi0 = _mm256_permute_pd(t1,0);
+            __m256d bc_denomi1 = _mm256_permute_pd(t1,0xf);
+            __m256d bc_denomi2 = _mm256_permute_pd(t2,0);
+            __m256d bc_denomi3 = _mm256_permute_pd(t2,0xf);
+
+            t1 = _mm256_permute2f128_pd(vec_denomi1, vec_denomi1, 0x0);
+            t2 = _mm256_permute2f128_pd(vec_denomi1, vec_denomi1, 0x11);
+            __m256d bc_denomi4 = _mm256_permute_pd(t1,0);
+            __m256d bc_denomi5 = _mm256_permute_pd(t1,0xf);
+            __m256d bc_denomi6 = _mm256_permute_pd(t2,0);
+            __m256d bc_denomi7 = _mm256_permute_pd(t2,0xf);
+
             for(int j = 0; j < N; j += 4) {
                 __m256d vec_numi00 = _mm256_setzero_pd();
                 __m256d vec_numi01 = _mm256_setzero_pd();
@@ -337,20 +351,6 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 __m256d numi5 = _mm256_insertf128_pd(_mm256_shuffle_pd(vec_numi01,vec_numi11, 0b0011),_mm256_castpd256_pd128(_mm256_shuffle_pd(vec_numi21,vec_numi31, 0b0011)), 1);
                 __m256d numi6 = _mm256_unpacklo_pd(_mm256_permute2f128_pd(vec_numi01, vec_numi21, 0x31), _mm256_permute2f128_pd(vec_numi11, vec_numi31, 0x31));
                 __m256d numi7 = _mm256_unpackhi_pd(_mm256_permute2f128_pd(vec_numi01, vec_numi21, 0x31), _mm256_permute2f128_pd(vec_numi11, vec_numi31, 0x31));
-
-                __m256d t1 = _mm256_permute2f128_pd(vec_denomi0, vec_denomi0, 0x0);
-                __m256d t2 = _mm256_permute2f128_pd(vec_denomi0, vec_denomi0, 0x11);
-                __m256d bc_denomi0 = _mm256_permute_pd(t1,0);
-                __m256d bc_denomi1 = _mm256_permute_pd(t1,0xf);
-                __m256d bc_denomi2 = _mm256_permute_pd(t2,0);
-                __m256d bc_denomi3 = _mm256_permute_pd(t2,0xf);
-
-                t1 = _mm256_permute2f128_pd(vec_denomi1, vec_denomi1, 0x0);
-                t2 = _mm256_permute2f128_pd(vec_denomi1, vec_denomi1, 0x11);
-                __m256d bc_denomi4 = _mm256_permute_pd(t1,0);
-                __m256d bc_denomi5 = _mm256_permute_pd(t1,0xf);
-                __m256d bc_denomi6 = _mm256_permute_pd(t2,0);
-                __m256d bc_denomi7 = _mm256_permute_pd(t2,0xf);
 
                 _mm256_storeu_pd(A+i*N+j, _mm256_mul_pd(_mm256_mul_pd(numi0, a0), bc_denomi0));
                 _mm256_storeu_pd(A+(i+1)*N+j, _mm256_mul_pd(_mm256_mul_pd(numi1, a1), bc_denomi1));
