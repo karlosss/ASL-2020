@@ -2,17 +2,6 @@
 #include "common.h"
 #include <immintrin.h>
 
-bool double_eq(double a, double b) {
-    return fabs(a-b) < 0.001;
-}
-
-void compvec(__m256d vec, double a, double b, double c, double d){
-    if(!double_eq(((double*) &vec)[0], a) || !double_eq(((double*) &vec)[1], b) || !double_eq(((double*) &vec)[2], c) || !double_eq(((double*) &vec)[3], d)){
-        std::cout << "Expected: " << a << " " << b << " " << c << " " << d << ", got " << ((double*) &vec)[0] << " " <<
-                  ((double*) &vec)[1] << " " << ((double*) &vec)[2] << " " << ((double*) &vec)[3] << "\n";
-    }
-}
-
 size_t flop_count(int N, int M, int T, int n_iter){
     size_t add = 0;
     size_t mul = 0;

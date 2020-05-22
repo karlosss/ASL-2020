@@ -1,45 +1,7 @@
 #include <bits/stdc++.h>
 #include "common.h"
 #include <immintrin.h>
-#include <assert.h>
 
-void compvec(__m256d vec, double a, double b, double c, double d){
-    if(
-            ((double *)&vec)[0] == a &&
-            ((double *)&vec)[1] == b &&
-            ((double *)&vec)[2] == c &&
-            ((double *)&vec)[3] == d){
-
-    }
-    else{
-        std::cout << "ERROR m256d!\n";
-    }
-}
-
-void compvec(__m128d vec, double a, double b){
-    if(
-            ((double *)&vec)[0] == a &&
-            ((double *)&vec)[1] == b){
-
-    }
-    else{
-        std::cout << "ERROR m128d!\n";
-    }
-}
-
-
-void compvec(__m128i vec, int a, int b, int c, int d){
-    if(
-            ((int *)&vec)[0] == a &&
-            ((int *)&vec)[1] == b &&
-            ((int *)&vec)[2] == c &&
-            ((int *)&vec)[3] == d){
-
-    }
-    else{
-        std::cout << "ERROR m128i!\n";
-    }
-}
 
 size_t flop_count(int N, int M, int T, int n_iter){
     size_t add = 0;

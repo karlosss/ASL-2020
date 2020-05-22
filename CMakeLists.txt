@@ -24,26 +24,20 @@ target_link_libraries(validate LIBS ${PAPI_LIBRARIES})
 add_executable(no_opt opts/no_opt.cpp)
 target_link_libraries(no_opt LIBS ${PAPI_LIBRARIES})
 
-add_executable(opt1 opts/opt1.cpp)
-target_link_libraries(opt1 LIBS ${PAPI_LIBRARIES})
+add_executable(opt_stdc opts/opt_stdc.cpp)
+target_link_libraries(opt_stdc LIBS ${PAPI_LIBRARIES})
 
-add_executable(opt2_no_unroll opts/opt2_no_unroll.cpp)
-target_link_libraries(opt2_no_unroll LIBS ${PAPI_LIBRARIES})
+add_executable(opt_stdc_mem opts/opt_stdc_mem.cpp)
+target_link_libraries(opt_stdc_mem LIBS ${PAPI_LIBRARIES})
 
-add_executable(opt2 opts/opt2_no_unroll.cpp)
-target_link_libraries(opt2 LIBS ${PAPI_LIBRARIES})
+add_executable(opt_stdc_tp_mem opts/opt_stdc_tp_mem.cpp)
+target_link_libraries(opt_stdc_tp_mem LIBS ${PAPI_LIBRARIES})
 
-add_executable(opt1_unrolled opts/opt1_unrolled.cpp)
-target_link_libraries(opt1_unrolled LIBS ${PAPI_LIBRARIES})
+add_executable(opt_avx_tp opts/opt_avx_tp.cpp)
+target_link_libraries(opt_avx_tp LIBS ${PAPI_LIBRARIES})
 
-add_executable(avx_update_no_tp opts/avx_update_no_tp.cpp)
-target_link_libraries(avx_update_no_tp LIBS ${PAPI_LIBRARIES})
+add_executable(opt_avx_tp_mem opts/opt_avx_tp_mem.cpp)
+target_link_libraries(opt_avx_tp_mem LIBS ${PAPI_LIBRARIES})
 
-add_executable(avx_update_tp opts/avx_update_tp.cpp)
-target_link_libraries(avx_update_tp LIBS ${PAPI_LIBRARIES})
-
-add_executable(avx_final opts/avx_final.cpp)
-target_link_libraries(avx_final LIBS ${PAPI_LIBRARIES})
-
-add_executable(avx_final_inverted_denoms opts/avx_final_inverted_denoms.cpp)
-target_link_libraries(avx_final_inverted_denoms LIBS ${PAPI_LIBRARIES})
+add_executable(opt_avx_mem opts/opt_avx_mem.cpp)
+target_link_libraries(opt_avx_mem LIBS ${PAPI_LIBRARIES})

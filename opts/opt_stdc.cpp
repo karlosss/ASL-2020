@@ -50,8 +50,8 @@ size_t flop_count(int N, int M, int T, int n_iter){
 }
 
 void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW, double* C, int N, int M, int T, int n_iter) {
-    double* scales = C + T;
-
+    double* scales = (double*) malloc(T*sizeof(double));
+    
     REGION_BEGIN(baum_welch)
 
     for(int it = 0; it < n_iter; it++) {
@@ -60,42 +60,56 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         REGION_BEGIN(forward_vars)
         double scale = 0.;
         for(int i = 0; i < N; i++) {
-            FW[i*T] = PI[i]*B[i*M + O[0]];
+            FW[i*T + 0] = PI[i]*B[i*M + O[0]];
             scale += FW[i*T + 0];
         }
-
         // Scale timestep 0
         C[0] = 1./scale;
         scales[0] = scale;
-
         for(int i = 0; i < N; i++) {
-            FW[i*T]*= C[0];
+            FW[i*T + 0]*= C[0];
         }
 
         for(int t = 1; t < T; t++) {
             scale = 0.;
             int obs = O[t];
-            for(int i = 0; i < N; i++) {
+            for(int i = 0; i < N-3; i+=4) {
                 double accum0 = 0.;
                 double accum1 = 0.;
                 double accum2 = 0.;
                 double accum3 = 0.;
 
-                int limit = N-3;
-                for(int j = 0; j < limit; j+=4) {
-                    accum0 += FW[j*T + t-1]*A[j*N + i];
-                    accum1 += FW[(j+1)*T + t-1]*A[(j+1)*N + i];
-                    accum2 += FW[(j+2)*T + t-1]*A[(j+2)*N + i];
-                    accum3 += FW[(j+3)*T + t-1]*A[(j+3)*N + i];
+                double accum4 = 0.;
+                double accum5 = 0.;
+                double accum6 = 0.;
+                double accum7 = 0.;
+
+                
+
+                for(int j = 0; j < N-1; j+=2) {
+                    double fw_j = FW[j*T + t-1];
+                    accum0 += fw_j*A[j*N + i];
+                    accum1 += fw_j*A[j*N + i+1];
+                    accum2 += fw_j*A[j*N + i+2];
+                    accum3 += fw_j*A[j*N + i+3];
+
+                    double fw_j1 = FW[(j+1)*T + t-1];
+                    accum4 += fw_j1*A[(j+1)*N + i];
+                    accum5 += fw_j1*A[(j+1)*N + i+1];
+                    accum6 += fw_j1*A[(j+1)*N + i+2];
+                    accum7 += fw_j1*A[(j+1)*N + i+3];
                 }
-                FW[i*T + t] = B[i*M + obs]*(accum0 + accum1 + accum2 + accum3);
-                scale += FW[i*T + t];
+                FW[i*T + t] = B[i*M + obs]*(accum0+accum4);
+                FW[(i+1)*T + t] = B[(i+1)*M + obs]*(accum1+accum5);
+                FW[(i+2)*T + t] = B[(i+2)*M + obs]*(accum2+accum6);
+                FW[(i+3)*T + t] = B[(i+3)*M + obs]*(accum3+accum7);
+                scale += FW[i*T + t] + FW[(i+1)*T + t] + FW[(i+2)*T + t] + FW[(i+3)*T + t];
             }
             C[t] = 1./scale;
             scales[t] = scale;
-
+            double c_t = C[t];
             for(int i = 0; i < N; i++) {
-                FW[i*T + t]*= C[t];
+                FW[i*T + t]*= c_t;
             }
         }
 
@@ -110,21 +124,27 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
 
         for(int t = T-2; t >= 0; t--) {
             int obs = O[t+1];
-            for(int i = 0; i < N; i++) {
+            double c_t = C[t];
+            for(int i = 0; i < N-3; i+=4) {
                 double accum0 = 0.;
                 double accum1 = 0.;
                 double accum2 = 0.;
                 double accum3 = 0.;
+                
+                for(int j = 0; j < N; j++) {
+                    double bw_j = BW[j*T + t+1];
+                    double b_j = B[j*M + obs];
+                    accum0 += bw_j*A[i*N+j]*b_j;
+                    accum1 += bw_j*A[(i+1)*N+j]*b_j;
+                    accum2 += bw_j*A[(i+2)*N+j]*b_j;
+                    accum3 += bw_j*A[(i+3)*N+j]*b_j;
 
-                int limit = N-3;
-                for(int j = 0; j < limit; j+=4) {
-                    accum0 += BW[j*T + t+1]*A[i*N+j]*B[j*M + obs];
-                    accum1 += BW[(j+1)*T + t+1]*A[i*N+j+1]*B[(j+1)*M + obs];
-                    accum2 += BW[(j+2)*T + t+1]*A[i*N+j+2]*B[(j+2)*M + obs];
-                    accum3 += BW[(j+3)*T + t+1]*A[i*N+j+3]*B[(j+3)*M + obs];
                 }
 
-                BW[i*T + t] = C[t]*(accum0 + accum1 + accum2 + accum3);
+                BW[i*T + t] = c_t*accum0;
+                BW[(i+1)*T + t] = c_t*accum1;
+                BW[(i+2)*T + t] = c_t*accum2;
+                BW[(i+3)*T + t] = c_t*accum3;
             }
         }
         REGION_END(backward_vars)
@@ -140,7 +160,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
         // update the State Transition probabilities
         for(int i = 0; i < N; i++) {
             for(int j = 0; j < N; j++) {
-
+            
                 double n_accum0 = 0.;
                 double n_accum1 = 0.;
                 double n_accum2 = 0.;
@@ -165,7 +185,7 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 }
                 for(; t < T-1; t++) {
                     n_accum0 += FW[i*T + t]*A[i*N + j]*B[j*M + O[t+1]]*BW[j*T + t+1];
-                    d_accum0 += FW[i*T + t]*BW[i*T + t]*scales[t];
+                    d_accum0 += FW[i*T + t]*BW[i*T + t]*scales[t]; 
                 }
                 A[i*N + j] = (n_accum0 + n_accum1 + n_accum2 + n_accum3)/(d_accum0 + d_accum1 + d_accum2 + d_accum3);
             }
@@ -186,15 +206,19 @@ void baum_welch(double* PI, double* A, double* B, int* O, double* FW, double* BW
                 double d_accum2 = 0.;
                 double d_accum3 = 0.;
                 for(int t = 0; t < T-3; t+=4) {
-                    d_accum0 += FW[j*T + t]*BW[j*T + t]*scales[t];
-                    d_accum1 += FW[j*T + t+1]*BW[j*T + t+1]*scales[t+1];
-                    d_accum2 += FW[j*T + t+2]*BW[j*T + t+2]*scales[t+2];
-                    d_accum3 += FW[j*T + t+3]*BW[j*T + t+3]*scales[t+3];
+                    double mul0 = FW[j*T + t]*BW[j*T + t]*scales[t];
+                    d_accum0 += mul0;
+                    double mul1 = FW[j*T + t+1]*BW[j*T + t+1]*scales[t+1];
+                    d_accum1 += mul1;
+                    double mul2 = FW[j*T + t+2]*BW[j*T + t+2]*scales[t+2];
+                    d_accum2 += mul2;
+                    double mul3 = FW[j*T + t+3]*BW[j*T + t+3]*scales[t+3];
+                    d_accum3 += mul3;
 
-                    if(O[t] == o) n_accum0 += FW[j*T + t]*BW[j*T + t]*scales[t];
-                    if(O[t+1] == o) n_accum1 += FW[j*T + t+1]*BW[j*T + t+1]*scales[t+1];
-                    if(O[t+2] == o) n_accum2 += FW[j*T + t+2]*BW[j*T + t+2]*scales[t+2];
-                    if(O[t+3] == o) n_accum3 += FW[j*T + t+3]*BW[j*T + t+3]*scales[t+3];
+                    if(O[t] == o) n_accum0 += mul0;
+                    if(O[t+1] == o) n_accum1 += mul1;
+                    if(O[t+2] == o) n_accum2 += mul2;
+                    if(O[t+3] == o) n_accum3 += mul3;
                 }
                 B[j*M + o] = (n_accum0+n_accum1+n_accum2+n_accum3)/(d_accum0+d_accum1+d_accum2+d_accum3);
             }
