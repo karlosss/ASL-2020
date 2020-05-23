@@ -587,6 +587,85 @@ def multiplot_NP_M_comparison(csv_files,section, N=None, M=None, T=None):
         bbox_to_anchor=(0.6, 0., 0.5, 0.5),
         fontsize=16
     )
+    plt.savefig('perf_comparison')
+    plt.show()
+
+def multiplot_runtime_comparison(csv_files,section, N=None, M=None, T=None):
+    plt.figure(figsize=(20, 15), facecolor='w')
+
+    fig = plt.gcf()
+    fig.suptitle(f"Comparison of {section}", fontsize=16)
+
+    ax_NP = plt.subplot(2, 3, 1)
+    ax_MP = plt.subplot(2, 3, 2)
+    ax_TP = plt.subplot(2, 3, 3)
+    ax_table = plt.subplot(2,3,4)
+
+    exp_NP = exp_MP = exp_TP = None
+
+    for csv_file in csv_files:
+        data = pd.read_csv(csv_file)
+
+        # get the fixed parameters in the experiment
+        N_fix, M_fix, T_fix = get_fixed_variables(data)
+
+        binary_name, compiler, flags = get_experiment_info(data)
+        label = f"{binary_name}, {compiler}, {flags}"
+
+        x_NP, y_NP = extract_NP_data_runtime(data, M_fix, T_fix, section=section)
+        x_MP, y_MP = extract_MP_data_runtime(data, N_fix, T_fix, section=section)
+        x_TP, y_TP = extract_TP_data_runtime(data, N_fix, M_fix, section=section)
+
+        plot_series(ax_NP, x_NP, y_NP, label=label)
+        plot_series(ax_MP, x_MP, y_MP, label=label)
+        plot_series(ax_TP, x_TP, y_TP, label=label)
+
+        if exp_NP is None:
+            exp_NP = is_exponential(x_NP.tolist())
+            min_exp_NP, max_exp_NP = int(math.log2(x_NP.min())), int(math.log2(x_NP.max()))
+        if exp_MP is None:
+            exp_MP = is_exponential(x_MP.tolist())
+            min_exp_MP, max_exp_MP = int(math.log2(x_MP.min())), int(math.log2(x_MP.max()))
+        if exp_TP is None:
+            exp_TP = is_exponential(x_TP.tolist())
+            min_exp_TP, max_exp_TP = int(math.log2(x_TP.min())), int(math.log2(x_TP.max()))
+
+
+    format_plot(ax_NP, 
+        xlabel=csv_cols.PARAM_N,
+        ylabel=f"Cycles",
+        title=f"M = {M_fix}, T = {T_fix}",
+        is_exp=exp_NP, 
+        min_exp=min_exp_NP, 
+        max_exp=max_exp_NP
+    )
+    format_plot(ax_MP, 
+        xlabel=csv_cols.PARAM_M,
+        ylabel=f"Cycles",
+        title=f"N = {N_fix}, T = {T_fix}",
+        is_exp=exp_MP, 
+        min_exp=min_exp_MP, 
+        max_exp=max_exp_MP
+    )
+    format_plot(ax_TP, 
+        xlabel=csv_cols.PARAM_T,
+        ylabel=f"Cycles",
+        title=f"N = {N_fix}, M = {M_fix}",
+        is_exp=exp_TP, 
+        min_exp=min_exp_TP, 
+        max_exp=max_exp_TP
+    )
+    plot_cpu_info_table(ax_table, "CPU Info")
+    fig.tight_layout(pad=4.0, rect=[0, 0.0, 1, 0.95])
+    handles, labels = ax_NP.get_legend_handles_labels()
+    fig.legend(
+        handles, 
+        labels, 
+        loc='center',
+        bbox_to_anchor=(0.6, 0., 0.5, 0.5),
+        fontsize=16
+    )
+    plt.savefig('runtime_comparison')
     plt.show()
 
 
@@ -918,6 +997,7 @@ if __name__ == "__main__":
         dir_path = os.path.dirname(csv_path)
         multiplot_NP_MP_TP_S(csv_path, dir_path, N_fix, M_fix, T_fix, False)
         multiplot_NP_MP_TP_Cache(csv_path, dir_path, N_fix, M_fix, T_fix, False)
+        multiplot_runtime(csv_path, dir_path,N_fix, M_fix, T_fix, False)
         plot_roofline(csv_path, dir_path, N_fix, M_fix, T_fix, section=args.section)
         exit(0)
     else:
@@ -934,3 +1014,4 @@ if __name__ == "__main__":
 
     multiplot_NP_M_comparison(csv_files, args.section)
     multiplot_NP_M_comparison_cache(csv_files, args.section)
+    multiplot_runtime_comparison(csv_files, args.section)
